@@ -153,7 +153,7 @@ class Music(commands.Cog):
             title = item['title']
             duration = item['duration']
 
-            queue_message += f"\n{i + 1}. [ {duration // 60:02}:{duration % 60:02} ] {title}"
+            queue_message += f"\n{i + 1}. [ {int(duration // 60):02}:{int(duration % 60):02} ] {title}"
 
         await ctx.message.reply(queue_message)
 
