@@ -308,7 +308,7 @@ async def speaker(ctx):
     usage="sora update",
     help="""ボクを更新するのだ。
 Gitリポジトリから最新の変更を取得するのだ。
-取得したら、「sora reboot」してほしいのだ。"""
+取得したら、自動で再起動するのだ。"""
 )
 async def update(ctx):
     await ctx.message.reply("更新を開始するのだ...")
@@ -316,12 +316,12 @@ async def update(ctx):
     try:
         result = subprocess.run(["git", "pull"], capture_output=True, text=True)
         if result.returncode == 0:
-            await ctx.message.reply("更新が完了したのだ。再起動するのだ。")
+            await ctx.message.reply("更新できたのだ！")
             await reboot(ctx)
         else:
-            await ctx.message.reply(f"更新に失敗したのだ。\n{result.stderr}")
+            await ctx.message.reply(f"更新に失敗したのだ・・・。\n{result.stderr}")
     except Exception as e:
-        await ctx.message.reply(f"エラーが発生したのだ：{e}")
+        await ctx.message.reply(f"更新中にエラーが発生したのだ・・・。\n{e}")
 
 async def speak(message, guild):
 
