@@ -34,6 +34,16 @@ class Music(commands.Cog):
             await ctx.message.reply()
             return
 
+        if query.startswith('playlist'):
+            parts = query.split(maxsplit=1)
+            if len(parts) < 2:
+                await ctx.message.reply("プレイリストのURLを指定するのだ")
+                return
+
+            playlist_url = parts[1]
+            await self.queue_playlist(ctx, playlist_url)
+            return
+        
         if query == 'stop':
             voice_client = ctx.message.guild.voice_client
             if voice_client is None or not voice_client.is_playing():
@@ -211,3 +221,35 @@ class Music(commands.Cog):
 
         await playback_finished.wait()
         logging.info(f"Finished playing: {title}")
+
+    async def queue_playlist(self, ctx, playlist_url):
+        ydl_opts = {
+            'quiet': True,
+            'extract_flat': True,
+            'skip_download': True,
+            'force_generic_extractor': True,
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(playlist_url, download=False)
+
+        if 'entries' not in info:
+            await ctx.message.reply("プレイリストが見つからなかったのだ")
+            return
+
+        playlist_entries = info['entries']
+        for entry in playlist_entries:
+            yt_item = {
+                'url': entry['url'],
+                'title': entry.get('title', 'Unknown title'),
+                'duration': entry.get('duration', 0)
+            }
+            self.music_queue.append(yt_item)
+
+        voice_client = ctx.message.guild.voice_client
+        if voice_client is None or not voice_client.is_playing():
+            url = self.music_queue.pop(0)
+            await self.stream_music(ctx, url)
+        
+        await ctx.message.reply(f"{len(playlist_entries)} 曲が順番待ちに入ったのだ")
+        logging.info(f"Queued songs from playlist: {playlist_entries}")
