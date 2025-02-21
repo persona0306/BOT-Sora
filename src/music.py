@@ -144,16 +144,16 @@ class Music(commands.Cog):
             await ctx.message.reply("順番待ちの曲がないのだ。")
             return
 
-        queue_message = "👇順番待ちの曲なのだ👇\n"
+        queue_message = "👇順番待ちの曲なのだ👇"
         for i, item in enumerate(self.music_queue):
             if MAX_QUEUE_SHOW_COUNT <= i:
-                queue_message += f"・・・あと{len(self.music_queue) - i}曲あるのだ"
+                queue_message += f"\n・・・あと{len(self.music_queue) - i}曲あるのだ"
                 break
 
             title = item['title']
             duration = item['duration']
 
-            queue_message += f"{i + 1}. [ {duration // 60:02}:{duration % 60:02} ] {title}\n"
+            queue_message += f"\n{i + 1}. [ {duration // 60:02}:{duration % 60:02} ] {title}"
 
         await ctx.message.reply(queue_message)
 
