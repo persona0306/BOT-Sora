@@ -301,6 +301,28 @@ async def speaker(ctx):
     except ValueError:
         await ctx.message.channel.send('数字で入力してください。\n例(ずんだもん)：sora speaker 3')
 
+@bot.command(
+    name="update",
+    brief="ボクを更新するのだ。",
+    category="システム",
+    usage="sora update",
+    help="""ボクを更新するのだ。
+Gitリポジトリから最新の変更を取得するのだ。
+取得したら、「sora reboot」してほしいのだ。"""
+)
+async def update(ctx):
+    await ctx.message.reply("更新を開始するのだ...")
+    
+    try:
+        result = subprocess.run(["git", "pull"], capture_output=True, text=True)
+        if result.returncode == 0:
+            await ctx.message.reply("更新が完了したのだ。再起動するのだ。")
+            await reboot(ctx)
+        else:
+            await ctx.message.reply(f"更新に失敗したのだ。\n{result.stderr}")
+    except Exception as e:
+        await ctx.message.reply(f"エラーが発生したのだ：{e}")
+
 async def speak(message, guild):
 
     if (len(message) > MAX_SPEAK_LENGTH):
