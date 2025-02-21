@@ -11,7 +11,7 @@ import discord
 from discord.ext import commands
 from voicevox import Client
 
-import music
+import src.music as music
 
 # Configure logging
 log_file_dir = "./log"
