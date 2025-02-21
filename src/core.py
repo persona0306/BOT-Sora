@@ -14,7 +14,10 @@ from voicevox import Client
 import src.music as music
 
 # Configure logging
-log_file_path = "log/sora_log"
+log_file_dir = "./log"
+if not os.path.exists(log_file_dir):
+    os.makedirs(log_file_dir)
+log_file_path = log_file_dir + "/sora_log"
 handler = TimedRotatingFileHandler(log_file_path, when="H", interval=1, backupCount=24 * 31)
 
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
