@@ -207,9 +207,13 @@ async def join(ctx):
     help="ボクが通話から出るのだ。"
 )
 async def leave(ctx):
-    if ctx.message.guild.voice_client is None:
+    voice_client = ctx.message.guild.voice_client
+    if voice_client is None:
         await ctx.message.channel.send('VCに入ってないのだ')
         return
+
+    voice_client.stop()
+    music.Music.music_queue.clear()
     
     await speak(
         'じゃあね、なのだ',
