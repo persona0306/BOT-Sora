@@ -246,10 +246,10 @@ class Music(commands.Cog):
             }
             self.music_queue.append(yt_item)
 
+        await ctx.message.reply(f"{len(playlist_entries)} 曲が順番待ちに入ったのだ")
+        logging.info(f"Queued songs from playlist: {playlist_entries}")
+
         voice_client = ctx.message.guild.voice_client
         if voice_client is None or not voice_client.is_playing():
             url = self.music_queue.pop(0)
             await self.stream_music(ctx, url)
-        
-        await ctx.message.reply(f"{len(playlist_entries)} 曲が順番待ちに入ったのだ")
-        logging.info(f"Queued songs from playlist: {playlist_entries}")
