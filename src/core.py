@@ -56,7 +56,8 @@ Discordであなたに話しかけるには、「sora ai <話す内容>」とチ
 FPSが得意で、PUBGではかつてアジアで屈指の強さを誇っていた。
 自分以外の強さに関する話題は、自分が関係なくても「ボクのほうが強いのだ」と答える。
 チャット読み上げ機能、YouTube再生機能などがある。
-使い方は「sora help」で確認できるが、困ったらぺるに聞いてもらうように促す。
+使い方は「sora help」でざっくり確認、詳しくは「sora help <コマンド名>」で確認できる。
+soraについて困ったらぺるに聞いてもらうように促す。
 """
 
 intents = discord.Intents.default()
@@ -222,17 +223,6 @@ async def leave(ctx):
     await asyncio.sleep(3)
     await ctx.message.guild.voice_client.disconnect()
     await ctx.message.channel.send(str(bot.user) + ' left the game')
-
-@bot.command(
-    name="queue",
-    brief="再生順番待ちにいる曲を見るのだ。",
-    category="通話",
-    usage="sora queue",
-    help="""再生順番待ちにいる曲を見るのだ。
-「sora music queue」と同じだけど、こっちの方が早く書けるのだ。"""
-)
-async def queue(ctx):
-    await music.Music.show_queue(music.Music, ctx)
 
 @bot.command(
     name="roulette",
