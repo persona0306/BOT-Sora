@@ -103,8 +103,12 @@ class Music(commands.Cog):
         }
 
         logging.info("Extracting playlist info")
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(query, download=False)
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(query, download=False)
+        except yt_dlp.utils.DownloadError as e:
+            await ctx.message.reply("プレイリストが再生できなかったのだ・・・。\n%s" % e)
+            return
 
         if 'entries' not in info:
             await ctx.message.reply("プレイリストが見つからなかったのだ・・・。")
