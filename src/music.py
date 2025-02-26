@@ -20,10 +20,9 @@ class Music(commands.Cog):
     
     @commands.command(
         name="insert",
-        brief="音楽を検索して再生するのだ。",
-        usage="sora insert <曲名>",
-        help="""音楽を検索して再生するのだ。
-再生中の曲があるときは、順番待ちに入れるのだ。"""
+        brief="音楽を検索して、順番待ちに割り込むのだ。",
+        usage="sora insert <順番> <曲名>",
+        help="""音楽を検索して、順番待ちに割り込むのだ。"""
     )
     async def insert(self, ctx):
         args = ctx.message.content[7 + len(core.bot.command_prefix):]
