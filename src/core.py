@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import os
 import random
 import logging
@@ -6,6 +7,7 @@ from logging.handlers import TimedRotatingFileHandler
 from openai import OpenAI
 import subprocess
 import sys
+import zipfile
 
 import discord
 from discord.ext import commands
@@ -222,6 +224,43 @@ async def leave(ctx):
     await asyncio.sleep(3)
     await ctx.message.guild.voice_client.disconnect()
     await ctx.message.channel.send(str(bot.user) + ' left the game')
+
+@bot.command(
+    name="log",
+    brief="ログファイルを送信するのだ。",
+    category="システム",
+    usage="sora log [start_datetime] [end_datetime]",
+    help="""ログファイルを送信するのだ。
+オプションで開始日時と終了日時を指定できるのだ。
+日時の形式は 'MMDDHH' なのだ。"""
+)
+async def log(ctx):
+    logging.info("log command called")
+
+    log_files = []
+    for root, dirs, files in os.walk(log_file_dir):
+        for file in files:
+            file_path = os.path.join(root, file)
+            log_files.append(file_path)
+    
+    logging.info("log_files: %s", log_files)
+
+    logging.info("Creating zip file...")
+
+    zip_file_path = os.path.join(log_file_dir, "sora_logs.zip")
+    with zipfile.ZipFile(zip_file_path, 'w') as zipf:
+        for log_file in log_files:
+            zipf.write(log_file, os.path.basename(log_file) + ".txt")
+
+    logging.info("Sending zip file...")
+
+    await ctx.message.channel.send(file=discord.File(zip_file_path))
+
+    logging.info("Removing zip file...")
+
+    os.remove(zip_file_path)
+
+    logging.info("log command completed")
 
 @bot.command(
     name="queue",
