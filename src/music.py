@@ -66,7 +66,7 @@ class Music(commands.Cog):
         logging.info("music command called with arg: %s", query)
 
         if query == '':
-            await ctx.message.reply()
+            await ctx.message.reply("曲名を入れるのだ。")
             return
 
         yt_item = self.get_youtube_url(query)
