@@ -283,12 +283,9 @@ class Music(commands.Cog):
             title = info.get('title', 'Unknown title')
             duration = info.get('duration', 0)
 
-        source = discord.PCMVolumeTransformer(
-            discord.FFmpegPCMAudio(
-                url2,
-                before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
-            ),
-            volume=0.2
+        source = discord.FFmpegPCMAudio(
+            url2,
+            before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
         )
 
         playback_finished = asyncio.Event()
