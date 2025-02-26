@@ -312,13 +312,16 @@ async def speaker(ctx):
     usage="sora update",
     help="""ボクを更新するのだ。
 Gitリポジトリから最新の変更を取得するのだ。
+branchを指定しなければ、mainを使うのだ。
 取得したら、自動で再起動するのだ。"""
 )
 async def update(ctx):
-    await ctx.message.reply("更新を開始するのだ...")
+    args = ctx.message.content.split()
+    branch = args[2] if len(args) > 2 else "main"
+    await ctx.message.reply(f"更新を開始するのだ... (ブランチ: {branch})")
     
     try:
-        result = subprocess.run(["git", "pull"], capture_output=True, text=True)
+        result = subprocess.run(["git", "pull", "origin", branch], capture_output=True, text=True)
         if result.returncode == 0:
             await ctx.message.reply("更新できたのだ！")
             await reboot(ctx)
