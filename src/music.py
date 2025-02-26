@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 import yt_dlp
 
-import src.core as core
+from . import core
 
 MAX_QUEUE_SHOW_COUNT = 9
 
