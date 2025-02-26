@@ -9,8 +9,8 @@ import discord
 from discord.ext import commands
 from voicevox import Client
 
-import src.music as music
-import src.system as system
+from . import music
+from . import system
 
 # Configure logging
 log_file_dir = "./log"
