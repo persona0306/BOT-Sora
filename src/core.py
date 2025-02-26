@@ -291,7 +291,10 @@ async def speak(message, guild):
 
     if os.path.exists(file_path):
         logging.info("cache file exists")
-        source = discord.FFmpegPCMAudio(file_path)
+        source = discord.PCMVolumeTransformer(
+            discord.FFmpegPCMAudio(file_path),
+            volume=0.4
+        )
         guild.voice_client.play(source)
         return
 
