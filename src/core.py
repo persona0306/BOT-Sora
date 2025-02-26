@@ -225,17 +225,6 @@ async def leave(ctx):
     await ctx.message.channel.send(str(bot.user) + ' left the game')
 
 @bot.command(
-    name="queue",
-    brief="再生順番待ちにいる曲を見るのだ。",
-    category="通話",
-    usage="sora queue",
-    help="""再生順番待ちにいる曲を見るのだ。
-「sora music queue」と同じだけど、こっちの方が早く書けるのだ。"""
-)
-async def queue(ctx):
-    await music.Music.show_queue(music.Music, ctx)
-
-@bot.command(
     name="roulette",
     brief="選択肢からランダムに選ぶのだ。",
     category="チャット",
