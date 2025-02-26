@@ -19,94 +19,54 @@ class Music(commands.Cog):
         self.bot = bot
     
     @commands.command(
-    name="music",
-    brief="音楽を再生するのだ。",
-    category="通話",
-    usage="sora music",
-    help="""音楽を再生するのだ。
-曲名を指定して再生するか、stopで再生を止めるのだ。"""
-)
-    async def music(self, ctx):
-        query = ctx.message.content[11:]
+        name="insert",
+        brief="音楽を検索して再生するのだ。",
+        usage="sora insert <曲名>",
+        help="""音楽を検索して再生するのだ。
+再生中の曲があるときは、順番待ちに入れるのだ。"""
+    )
+    async def insert(self, ctx):
+        args = ctx.message.content[7 + len(core.bot.command_prefix):]
+        logging.info("Insert command called with query: %s", args)
+
+        args_parts = args.split(maxsplit=1)
+        if len(args_parts) < 2 or not args_parts[0].isdigit():
+            await ctx.message.reply("挿入したい位置と曲名を正しく指定するのだ\n例: sora music insert <位置> <曲名>")
+            logging.info("Invalid arguments: %s", args)
+            return
+
+        insert_index = int(args_parts[0]) - 1
+
+        if insert_index < 0:
+            insert_index = 0
+
+        if insert_index > len(self.music_queue):
+            insert_index = len(self.music_queue)
+
+        insert_query = args_parts[1]
+        logging.info("Insert command called with index: %d and query: %s", insert_index, insert_query)
+
+        yt_item = self.get_youtube_url(insert_query)
+        self.music_queue.insert(insert_index, yt_item)
+
+        await ctx.message.reply(f"曲をキューの {insert_index + 1} 番目に挿入したのだ: {yt_item.get('title')}")
+        logging.info("Inserted to queue at position %d: %s (%s)", insert_index, yt_item.get('title'), yt_item.get('url'))
+
+        return
+    
+    @commands.command(
+        name="play",
+        brief="音楽を検索して再生するのだ。",
+        usage="sora play <曲名>",
+        help="""音楽を検索して再生するのだ。
+再生中の曲があるときは、順番待ちに入れるのだ。"""
+    )
+    async def play(self, ctx):
+        query = ctx.message.content[5 + len(core.bot.command_prefix):]
         logging.info("music command called with arg: %s", query)
 
         if query == '':
             await ctx.message.reply()
-            return
-
-        if query.startswith('playlist'):
-            parts = query.split(maxsplit=1)
-            if len(parts) < 2:
-                await ctx.message.reply("プレイリストのURLを指定するのだ")
-                return
-
-            playlist_url = parts[1]
-            await self.queue_playlist(ctx, playlist_url)
-            return
-        
-        if query == 'stop':
-            voice_client = ctx.message.guild.voice_client
-            if voice_client is None or not voice_client.is_playing():
-                await ctx.message.reply("再生中の音楽がないのだ")
-                return
-            voice_client.stop()
-            self.music_queue.clear()
-            await ctx.message.reply("音楽を止めたのだ")
-            return
-
-        if query.startswith('skip'):
-            voice_client = ctx.message.guild.voice_client
-            if voice_client is None or not voice_client.is_playing():
-                await ctx.message.reply("再生中の音楽がないのだ")
-                return
-
-            parts = query.split()
-            if len(parts) == 2:
-                if not parts[1].isdigit():
-                    await ctx.message.reply("スキップしたい音楽を半角数字で指定するのだ。")
-                    return
-
-                index = int(parts[1]) - 1
-
-                if not 0 <= index < len(self.music_queue):
-                    await ctx.message.reply("指定した番号の曲がないのだ。")
-                    return
-
-                item = self.music_queue.pop(index)
-                await ctx.message.reply(f"キューの {index + 1} 番目の曲を消したのだ。 ({item.get('title')})")
-
-            else:
-                voice_client.stop()
-                if self.music_queue:
-                    await ctx.message.reply("次の曲にスキップしたのだ。")
-                else:
-                    await ctx.message.reply("次の曲がないのだ。")
-            return
-
-        if query == 'queue':
-            await self.show_queue(ctx)
-            return
-
-        if query.startswith('insert'):
-            parts = query.split(maxsplit=2)
-            if len(parts) < 3 or not parts[1].isdigit():
-                await ctx.message.reply("挿入したい位置と曲名を正しく指定するのだ\n例: sora music insert <位置> <曲名>")
-                return
-
-            index = int(parts[1]) - 1
-            if index < 0 or index > len(self.music_queue):
-                await ctx.message.reply("その番号はないのだ")
-                return
-
-            insert_query = parts[2]
-            logging.info("Insert command called with index: %d and query: %s", index, insert_query)
-
-            yt_item = self.get_youtube_url(insert_query)
-            self.music_queue.insert(index, yt_item)
-
-            await ctx.message.reply(f"曲をキューの {index + 1} 番目に挿入したのだ: {yt_item.get('title')}")
-            logging.info("Inserted to queue at position %d: %s (%s)", index, yt_item.get('title'), yt_item.get('url'))
-
             return
 
         yt_item = self.get_youtube_url(query)
@@ -118,6 +78,140 @@ class Music(commands.Cog):
             logging.info("Added to queue: [%s] %s (%s)", yt_item.get('duration'), yt_item.get('title'), yt_item.get('url'))
         else:
             await self.bot.get_cog("Music").stream_music(ctx, yt_item)
+
+    @commands.command(
+        name="playlist",
+        brief="プレイリストを再生するのだ。",
+        usage="sora playlist <プレイリストのURL>",
+        help="""プレイリストを再生するのだ。
+再生中の曲があるときは、順番待ちに入れるのだ。"""
+    )
+    async def playlist(self, ctx):
+        query = ctx.message.content[9 + len(core.bot.command_prefix):]
+        logging.info("music command called with arg: %s", query)
+
+        if query == '':
+            await ctx.message.reply("プレイリストのURLを書くのだ。")
+            logging.info("No URL provided")
+            return
+
+        ydl_opts = {
+            'quiet': True,
+            'extract_flat': True,
+            'skip_download': True,
+            'force_generic_extractor': True,
+        }
+
+        logging.info("Extracting playlist info")
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(query, download=False)
+
+        if 'entries' not in info:
+            await ctx.message.reply("プレイリストが見つからなかったのだ・・・。")
+            logging.info("No playlist found")
+            return
+
+        playlist_entries = info['entries']
+        logging.info("Found playlist with %d entries", len(playlist_entries))
+        for entry in playlist_entries:
+            yt_item = {
+                'url': entry['url'],
+                'title': entry.get('title', 'Unknown title'),
+                'duration': entry.get('duration', 0)
+            }
+            self.music_queue.append(yt_item)
+            logging.info("Added to queue: [%s] %s (%s)", yt_item.get('duration'), yt_item.get('title'), yt_item.get('url'))
+
+        await ctx.message.reply(f"{len(playlist_entries)} 曲が順番待ちに入ったのだ。")
+        logging.info(f"Queued {len(playlist_entries)} songs from playlist: {playlist_entries}")
+
+        voice_client = ctx.message.guild.voice_client
+        if voice_client is None or not voice_client.is_playing():
+            logging.info("No music is playing, starting playback")
+            url = self.music_queue.pop(0)
+            await self.stream_music(ctx, url)
+
+    @commands.command(
+        name="queue",
+        brief="順番待ちの曲を見るのだ。",
+        usage="sora queue",
+        help="""順番待ちの曲を見るのだ。"""
+    )
+    async def queue(self, ctx):
+        await self.show_queue(ctx)
+
+    @commands.command(
+        name="skip",
+        brief="再生中の音楽を飛ばして、次の曲に進むのだ。",
+        usage="sora skip <飛ばしたい曲の番号> <範囲>",
+        help="""再生中の音楽を飛ばして、次の曲に進むのだ。
+数字を入れると、順番待ちの位置を選んで飛ばせるのだ。
+数字を2つ入れると、1番目の数字から、2番目の数字までの間を飛ばすのだ。"""
+    )
+    async def skip(self, ctx):
+        args = ctx.message.content[5 + len(core.bot.command_prefix):].split()
+        logging.info("skip command called with args: %s", args)
+
+        voice_client = ctx.message.guild.voice_client
+        if voice_client is None or not voice_client.is_playing():
+            await ctx.message.reply("再生中の音楽がないのだ")
+            logging.info("No music is playing")
+            return
+
+        if len(args) == 0:
+            voice_client.stop()
+            logging.info("Skipping current music")
+
+            if self.music_queue:
+                await ctx.message.reply("次の曲にスキップしたのだ。")
+            else:
+                await ctx.message.reply("次の曲がないのだ。")
+
+        else:
+            if not args[0].isdigit():
+                await ctx.message.reply("スキップしたい音楽の順番を「sora queue」で見て、半角数字で指定するのだ。")
+                logging.info("args[0] is not a number")
+                return
+            
+            start_index = int(args[0]) - 1
+            skip_count = 1
+
+            if len(args) > 1:
+                if not args[1].isdigit():
+                    await ctx.message.reply("範囲の2番目の数字が数字じゃないのだ。")
+                    logging.info("args[1] is not a number")
+                    return
+
+                end_index = int(args[1]) - 1
+                skip_count = end_index - start_index + 1
+
+            logging.info("Skipping %d songs starting from %d", skip_count, start_index)
+
+            for i in range(skip_count):
+                self.music_queue.pop(start_index)
+
+            await ctx.message.reply(f"キューの曲を {skip_count}曲 消したのだ。")
+
+    @commands.command(
+        name="stop",
+        brief="音楽を止めるのだ。",
+        usage="sora stop",
+        help="""音楽を止めるのだ。
+順番待ちの曲も消すのだ。"""
+    )
+    async def stop(self, ctx):
+        voice_client = ctx.message.guild.voice_client
+        if voice_client is None or not voice_client.is_playing():
+            await ctx.message.reply("再生中の音楽がないのだ")
+            logging.info("No music is playing")
+            return
+        
+        logging.info("Stopping music")
+        voice_client.stop()
+        self.music_queue.clear()
+
+        await ctx.message.reply("音楽を止めたのだ")
+        logging.info("Music stopped")
 
     def get_youtube_url(self, query):
         ydl_opts = {
@@ -221,35 +315,3 @@ class Music(commands.Cog):
 
         await playback_finished.wait()
         logging.info(f"Finished playing: {title}")
-
-    async def queue_playlist(self, ctx, playlist_url):
-        ydl_opts = {
-            'quiet': True,
-            'extract_flat': True,
-            'skip_download': True,
-            'force_generic_extractor': True,
-        }
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(playlist_url, download=False)
-
-        if 'entries' not in info:
-            await ctx.message.reply("プレイリストが見つからなかったのだ")
-            return
-
-        playlist_entries = info['entries']
-        for entry in playlist_entries:
-            yt_item = {
-                'url': entry['url'],
-                'title': entry.get('title', 'Unknown title'),
-                'duration': entry.get('duration', 0)
-            }
-            self.music_queue.append(yt_item)
-
-        await ctx.message.reply(f"{len(playlist_entries)} 曲が順番待ちに入ったのだ")
-        logging.info(f"Queued songs from playlist: {playlist_entries}")
-
-        voice_client = ctx.message.guild.voice_client
-        if voice_client is None or not voice_client.is_playing():
-            url = self.music_queue.pop(0)
-            await self.stream_music(ctx, url)
