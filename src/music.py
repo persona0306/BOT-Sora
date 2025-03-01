@@ -4,7 +4,8 @@ from logging.handlers import TimedRotatingFileHandler
 import random
 import time
 
-import discord
+from discord import FFmpegPCMAudio
+from discord import PCMVolumeTransformer
 from discord.ext import commands
 import yt_dlp
 
@@ -120,8 +121,8 @@ URLの前に「shuffle」と書くと、
         help="""順番待ちの曲をシャッフルするのだ。
 プレイリストのURLを入れると、
 プレイリストをシャッフルして順番待ちの最後に入れるのだ。
-もう順番待ちに入ってるものも混ぜたいときは、
-このコマンドの後に「sora shuffle」を使うのだ。"""
+順番待ちとプレイリストを混ぜたいときは、
+プレイリストを入れた後にシャッフルするのだ。"""
     )
     async def shuffle(self, ctx):
         query = ctx.message.content[8 + len(core.bot.command_prefix):]
@@ -276,9 +277,12 @@ URLの前に「shuffle」と書くと、
             title = info.get('title', 'Unknown title')
             duration = info.get('duration', 0)
 
-        source = discord.FFmpegPCMAudio(
-            url2,
-            before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+        source = PCMVolumeTransformer(
+            FFmpegPCMAudio(
+                url2,
+                before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+            ),
+            volume=0.01
         )
 
         playback_finished = asyncio.Event()
