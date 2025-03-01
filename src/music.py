@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from logging.handlers import TimedRotatingFileHandler
+import random
 import time
 
 import discord
@@ -81,58 +82,27 @@ class Music(commands.Cog):
     @commands.command(
         name="playlist",
         brief="プレイリストを再生するのだ。",
-        usage="sora playlist <プレイリストのURL>",
+        usage="sora playlist (shuffle) <プレイリストのURL>",
         help="""プレイリストを再生するのだ。
-再生中の曲があるときは、順番待ちに入れるのだ。"""
+再生中の曲があるときは、順番待ちに入れるのだ。
+URLの前に「shuffle」と書くと、
+プレイリストをシャッフルして順番待ちの最後に入れるのだ。
+もう順番待ちに入ってるものも混ぜたいときは、
+このコマンドの後に「sora shuffle」を使うのだ。"""
     )
     async def playlist(self, ctx):
         query = ctx.message.content[9 + len(core.bot.command_prefix):]
         logging.info("music command called with arg: %s", query)
 
-        if query == '':
-            await ctx.message.reply("プレイリストのURLを書くのだ。")
-            logging.info("No URL provided")
-            return
+        shuffle = False
 
-        ydl_opts = {
-            'quiet': True,
-            'extract_flat': True,
-            'skip_download': True,
-            'force_generic_extractor': True,
-        }
+        sprit_query = query.split()
+        if len(sprit_query) > 1 and sprit_query[0] == 'shuffle':
+            shuffle = True
+            query = sprit_query[1]
+            logging.info("Shuffle mode enabled")
 
-        logging.info("Extracting playlist info")
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(query, download=False)
-        except yt_dlp.utils.DownloadError as e:
-            await ctx.message.reply("プレイリストが再生できなかったのだ・・・。\n%s" % e)
-            return
-
-        if 'entries' not in info:
-            await ctx.message.reply("プレイリストが見つからなかったのだ・・・。")
-            logging.info("No playlist found")
-            return
-
-        playlist_entries = info['entries']
-        logging.info("Found playlist with %d entries", len(playlist_entries))
-        for entry in playlist_entries:
-            yt_item = {
-                'url': entry['url'],
-                'title': entry.get('title', 'Unknown title'),
-                'duration': entry.get('duration', 0)
-            }
-            self.music_queue.append(yt_item)
-            logging.info("Added to queue: [%s] %s (%s)", yt_item.get('duration'), yt_item.get('title'), yt_item.get('url'))
-
-        await ctx.message.reply(f"{len(playlist_entries)} 曲が順番待ちに入ったのだ。")
-        logging.info(f"Queued {len(playlist_entries)} songs from playlist: {playlist_entries}")
-
-        voice_client = ctx.message.guild.voice_client
-        if voice_client is None or not voice_client.is_playing():
-            logging.info("No music is playing, starting playback")
-            url = self.music_queue.pop(0)
-            await self.stream_music(ctx, url)
+        await self.queue_playlist(ctx, query, shuffle)
 
     @commands.command(
         name="queue",
@@ -142,6 +112,29 @@ class Music(commands.Cog):
     )
     async def queue(self, ctx):
         await self.show_queue(ctx)
+
+    @commands.command(
+        name="shuffle",
+        brief="順番待ちの曲をシャッフルするのだ。",
+        usage="sora shuffle (<プレイリストのURL>)",
+        help="""順番待ちの曲をシャッフルするのだ。
+プレイリストのURLを入れると、
+プレイリストをシャッフルして順番待ちの最後に入れるのだ。
+もう順番待ちに入ってるものも混ぜたいときは、
+このコマンドの後に「sora shuffle」を使うのだ。"""
+    )
+    async def shuffle(self, ctx):
+        query = ctx.message.content[8 + len(core.bot.command_prefix):]
+
+        logging.info("Shuffle command called with arg: %s", query)
+
+        if len(query) > 1:
+            logging.info("URL is provided, shuffling playlist")
+            await self.queue_playlist(ctx, query, True)
+        else:
+            random.shuffle(self.music_queue)
+            logging.info("No URL is provided, shuffled queue")
+            await ctx.message.reply("順番待ちの曲をシャッフルしたのだ。")
 
     @commands.command(
         name="skip",
@@ -315,3 +308,54 @@ class Music(commands.Cog):
 
         await playback_finished.wait()
         logging.info(f"Finished playing: {title}")
+
+    async def queue_playlist(self, ctx, url, shuffle=False):
+        if url == '':
+            await ctx.message.reply("プレイリストのURLを書くのだ。")
+            logging.info("No URL provided")
+            return
+
+        ydl_opts = {
+            'quiet': True,
+            'extract_flat': True,
+            'skip_download': True,
+            'force_generic_extractor': True,
+        }
+
+        logging.info("Extracting playlist info")
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+        except yt_dlp.utils.DownloadError as e:
+            await ctx.message.reply("プレイリストが再生できなかったのだ・・・。\n%s" % e)
+            return
+
+        if 'entries' not in info:
+            await ctx.message.reply("プレイリストが見つからなかったのだ・・・。")
+            logging.info("No playlist found")
+            return
+
+        playlist_entries = info['entries']
+        logging.info("Found playlist with %d entries", len(playlist_entries))
+
+        if shuffle:
+            random.shuffle(playlist_entries)
+            logging.info("Shuffled playlist")
+
+        for entry in playlist_entries:
+            yt_item = {
+                'url': entry['url'],
+                'title': entry.get('title', 'Unknown title'),
+                'duration': entry.get('duration', 0)
+            }
+            self.music_queue.append(yt_item)
+            logging.info("Added to queue: [%s] %s (%s)", yt_item.get('duration'), yt_item.get('title'), yt_item.get('url'))
+
+        await ctx.message.reply(f"{len(playlist_entries)} 曲を順番待ちに入れたのだ。")
+        logging.info(f"Queued {len(playlist_entries)} songs from playlist: {playlist_entries}")
+
+        voice_client = ctx.message.guild.voice_client
+        if voice_client is None or not voice_client.is_playing():
+            logging.info("No music is playing, starting playback")
+            url = self.music_queue.pop(0)
+            await self.stream_music(ctx, url)
