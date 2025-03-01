@@ -294,7 +294,7 @@ URLの前に「shuffle」と書くと、
         logging.info("Playing music: [%s] %s (%s)", duration, title, url2)
         voice_client.play(source, after=after_playing)
 
-        message = await ctx.message.reply(f"再生中なのだ👉 {title}")
+        message = await ctx.message.channel.send(f"再生中なのだ👉 {title}")
 
         start_time = time.time()
         while voice_client.is_playing():
