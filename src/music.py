@@ -120,8 +120,8 @@ URLの前に「shuffle」と書くと、
         help="""順番待ちの曲をシャッフルするのだ。
 プレイリストのURLを入れると、
 プレイリストをシャッフルして順番待ちの最後に入れるのだ。
-もう順番待ちに入ってるものも混ぜたいときは、
-このコマンドの後に「sora shuffle」を使うのだ。"""
+順番待ちとプレイリストを混ぜたいときは、
+プレイリストを入れた後にシャッフルするのだ。"""
     )
     async def shuffle(self, ctx):
         query = ctx.message.content[8 + len(core.bot.command_prefix):]
