@@ -282,7 +282,7 @@ URLの前に「shuffle」と書くと、
                 url2,
                 before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
             ),
-            volume=0.01
+            volume=0.02
         )
 
         playback_finished = asyncio.Event()
@@ -295,7 +295,7 @@ URLの前に「shuffle」と書くと、
         logging.info("Playing music: [%s] %s (%s)", duration, title, url2)
         voice_client.play(source, after=after_playing)
 
-        message = await self.bot_data.channel.send(f"再生中なのだ👉 {title}")
+        message = await self.bot.get_cog("VoiceClient").channel.send(f"再生中なのだ👉 {title}")
 
         start_time = time.time()
         while voice_client.is_playing():
