@@ -153,7 +153,10 @@ URLの前に「shuffle」と書くと、
         usage="sora skip <飛ばしたい曲の番号> <範囲>",
         help="""再生中の音楽を飛ばして、次の曲に進むのだ。
 数字を入れると、順番待ちの位置を選んで飛ばせるのだ。
-数字を2つ入れると、1番目の数字から、2番目の数字までの間を飛ばすのだ。"""
+数字を2つ入れると、1番目の数字から、2番目の数字までの間を飛ばすのだ。
+例: sora skip 3 で、3番目の曲を飛ばす。
+例: sora skip 2 5 で、2番目から5番目までの4曲を飛ばす。
+例: sora skip 1 9999 で、全曲を飛ばす。"""
     )
     async def skip(self, ctx):
         args = ctx.message.content[5 + len(self.bot.command_prefix):].split()
