@@ -9,7 +9,7 @@ from discord import PCMVolumeTransformer
 from discord.ext import commands
 import yt_dlp
 
-MAX_QUEUE_SHOW_COUNT = 9
+QUEUE_SHOW_COUNT = 10
 
 PROGRESS_BAR = ["▁", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
 
@@ -117,8 +117,9 @@ URLの前に「shuffle」と書くと、
     @commands.command(
         name="queue",
         brief="順番待ちの曲を見るのだ。",
-        usage="sora queue",
-        help="""順番待ちの曲を見るのだ。"""
+        usage="sora queue (<page>)",
+        help="""順番待ちの曲を見るのだ。
+ページを指定すると、そのページの曲を見るのだ。"""
     )
     async def queue(self, ctx):
         await self.show_queue(ctx)
@@ -244,10 +245,26 @@ URLの前に「shuffle」と書くと、
             await ctx.message.reply("順番待ちの曲がないのだ。")
             return
 
-        queue_message = "👇順番待ちの曲なのだ👇"
-        for i, item in enumerate(self.music_queue):
-            if MAX_QUEUE_SHOW_COUNT <= i:
-                queue_message += f"\n・・・あと{len(self.music_queue) - i}曲あるのだ"
+        page = 1
+        arg = ctx.message.content[6 + len(self.bot.command_prefix):]
+        if arg.isdigit():
+            page = int(arg)
+            if page < 1:
+                page = 1
+        
+        queue_count = len(self.music_queue)
+        
+        if queue_count <= (page - 1) * QUEUE_SHOW_COUNT:
+            await ctx.message.reply(f"そのページには曲がないのだ。({queue_count}曲しかないのだ。)")
+            return
+
+        queue_message = f"👇順番待ちの曲なのだ ( {page} / {1 + (queue_count + QUEUE_SHOW_COUNT - 1) // QUEUE_SHOW_COUNT} ページ)👇"
+        for i, item in enumerate(
+            self.music_queue,
+            start = (page - 1) * QUEUE_SHOW_COUNT
+        ):
+            if QUEUE_SHOW_COUNT <= i:
+                queue_message += f"\n・・・あと{len(self.music_queue) - i}曲あるのだ。\nsora queue <page>"
                 break
 
             title = item['title']
