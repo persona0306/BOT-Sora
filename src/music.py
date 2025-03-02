@@ -2,6 +2,7 @@ import asyncio
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import random
+import threading
 import time
 
 from discord import FFmpegPCMAudio
@@ -21,6 +22,7 @@ class Music(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.play_loop_thread = threading.Thread(target=self.play_loop)
     
     @commands.command(
         name="insert",
@@ -293,9 +295,6 @@ URLの前に「shuffle」と書くと、
             if error:
                 logging.error(f"Error while playing: {error}")
             playback_finished.set()
-            if self.music_queue:
-                next_url = self.music_queue.pop(0)
-                asyncio.run_coroutine_threadsafe(self.stream_music(ctx, next_url), core.bot.loop)
 
         logging.info("Playing music: [%s] %s (%s)", duration, title, url2)
         voice_client.play(source, after=after_playing)
@@ -377,8 +376,16 @@ URLの前に「shuffle」と書くと、
         await ctx.message.reply(f"{enrty_count} 曲を順番待ちに入れたのだ。")
         logging.info(f"Queued {len(playlist_entries)} songs from playlist: {playlist_entries}")
 
-        voice_client = ctx.message.guild.voice_client
-        if voice_client is None or not voice_client.is_playing():
-            logging.info("No music is playing, starting playback")
+    def play_loop(self):
+        while True:
+            if not self.music_queue:
+                time.sleep(1)
+                continue
+
+            voice_client = core.bot.voice_clients[0]
+            if voice_client is None or voice_client.is_playing():
+                time.sleep(1)
+                continue
+
             url = self.music_queue.pop(0)
-            await self.stream_music(ctx, url)
+            asyncio.run_coroutine_threadsafe(self.stream_music(core.bot.get_channel(voice_client.channel.id), url), core.bot.loop)
