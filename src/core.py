@@ -67,11 +67,16 @@ bot = commands.Bot(
 
 @bot.event
 async def on_ready():
-    logging.info("- BOT Sora Ready -")
-
     await bot.add_cog(Music(bot))
     await bot.add_cog(System(bot))
     await bot.add_cog(VoiceClient(bot))
+
+    await bot.change_presence(
+        activity=discord.Game(name="sora help"),
+        status=discord.Status.online
+    )
+
+    logging.info("- BOT Sora Ready -")
 
 @bot.event
 async def on_message(message: Message):
