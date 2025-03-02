@@ -2,7 +2,6 @@ import asyncio
 import os
 import random
 import logging
-from logging.handlers import TimedRotatingFileHandler
 from openai import OpenAI
 
 import discord
@@ -14,18 +13,6 @@ from .system import System
 from .voice_client import VoiceClient
 
 from . import voice_client
-
-# Configure logging
-log_file_dir = "./log"
-if not os.path.exists(log_file_dir):
-    os.makedirs(log_file_dir)
-log_file_path = log_file_dir + "/sora_log"
-handler = TimedRotatingFileHandler(log_file_path, when="H", interval=1, backupCount=24 * 31)
-
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-
-logging.basicConfig(level=logging.INFO, handlers=[handler])
 
 logging.info('''
 ========================================

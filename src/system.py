@@ -6,9 +6,10 @@ import sys
 from discord.ext import commands
 import discord
 
-from . import core
+from .. import run
 
 class System(commands.Cog):
+    
     def __init__(self, bot):
         self.bot = bot
 
@@ -25,7 +26,7 @@ class System(commands.Cog):
         logging.info("log command called")
 
         log_files = []
-        for root, dirs, files in os.walk(core.log_file_dir):
+        for root, dirs, files in os.walk(run.log_file_dir):
             for file in files:
                 file_path = os.path.join(root, file)
                 log_files.append(file_path)
@@ -34,7 +35,7 @@ class System(commands.Cog):
 
         logging.info("Creating zip file...")
 
-        zip_file_path = os.path.join(core.log_file_dir, "sora_logs.zip")
+        zip_file_path = os.path.join(run.log_file_dir, "sora_logs.zip")
         with zipfile.ZipFile(zip_file_path, 'w') as zipf:
             for log_file in log_files:
                 zipf.write(log_file, os.path.basename(log_file) + ".txt")
