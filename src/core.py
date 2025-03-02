@@ -66,7 +66,12 @@ bot = commands.Bot(
 )
 
 @bot.event
-async def on_ready():
+async def setup_hook():
+    await bot.change_presence(
+        activity=discord.Game(name="起動中..."),
+        status=discord.Status.do_not_disturb
+    )
+
     await bot.add_cog(Music(bot))
     await bot.add_cog(System(bot))
     await bot.add_cog(VoiceClient(bot))
