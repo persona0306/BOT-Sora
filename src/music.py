@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from logging.handlers import TimedRotatingFileHandler
 import random
 import threading
 import time
@@ -23,6 +22,7 @@ class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.play_loop_thread = threading.Thread(target=self.play_loop)
+        self.play_loop_thread.start()
     
     @commands.command(
         name="insert",
