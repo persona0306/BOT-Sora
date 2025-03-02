@@ -269,7 +269,7 @@ URLの前に「shuffle」と書くと、
 
             if page * QUEUE_SHOW_COUNT <= i:
                 queue_message += f"\n合計で{len(self.music_queue)}曲あるのだ。 ( {page} / {max_page} ページ )\n" \
-                    "次のページは 「sora queue {page + 1}」 で見るのだ。"
+                    f"次のページは 「sora queue {page + 1}」 で見るのだ。"
                 break
 
             title = item['title']
