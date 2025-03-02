@@ -13,7 +13,7 @@ MAX_SPEAK_LENGTH = 256
 VOICEVOX_URL = os.getenv("VOICEVOX_URL")
 
 class VoiceClient(commands.Cog):
-    speaker = 3
+    character = 3
     channel = None
 
     def __init__(self, bot):
@@ -59,8 +59,8 @@ class VoiceClient(commands.Cog):
         await sender_vc.connect()
         logging.info("Connected to voice channel")
 
-        self.bot.channel = ctx.message.channel
-        logging.info("Set bot_data.channel to: %s", self.bot.channel)
+        self.channel = ctx.message.channel
+        logging.info("Set channel to: %s", self.channel)
 
         await self.speak(
             'ぼっとそらなのだ。呼んだのだ？',
@@ -102,8 +102,8 @@ class VoiceClient(commands.Cog):
     )
     async def speaker(self, ctx):
         try:
-            self.bot.speaker = int(ctx.message.content[12:])
-            await ctx.message.channel.send('キャラクターを' + str(self.bot.speaker) + 'に設定したのだ。')
+            self.character = int(ctx.message.content[12:])
+            await ctx.message.channel.send('キャラクターを' + str(self.character) + 'に設定したのだ。')
 
         except ValueError:
             await ctx.message.channel.send('数字で入力してください。\n例(ずんだもん)：sora speaker 3')
@@ -120,7 +120,7 @@ class VoiceClient(commands.Cog):
             return
 
         logging.info("check cache file")
-        file_path = "./voice/message_" + str(self.speaker) + "_" + message[:32] + ".wav"
+        file_path = "./voice/message_" + str(self.character) + "_" + message[:32] + ".wav"
 
         if os.path.exists(file_path):
             logging.info("cache file exists")
@@ -138,11 +138,10 @@ class VoiceClient(commands.Cog):
             logging.info("VoiceVOX client connected")
             query = await client.create_audio_query(
                 message,
-                speaker = self.speaker,
-
+                speaker = self.character
             )
             with open(file_path, "wb") as f:
-                f.write(await query.synthesis(speaker=self.speaker))
+                f.write(await query.synthesis(speaker=self.character))
             logging.info("VoiceVOX synthesis completed")
 
         source = discord.PCMVolumeTransformer(
