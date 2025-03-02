@@ -88,8 +88,10 @@ async def on_message(message: Message):
     else:
         logging.info("Message is not a command, processing as chat.")
         
+        logging.info("message.channel: %s", message.channel)
+        logging.info("VoiceClient.channel: %s", VoiceClient.channel)
         if message.channel != VoiceClient.channel:
-            logging.info("Message not in bot_data.channel, ignoring.")
+            logging.info("Message not in VoiceClient.channel, ignoring.")
             return
         await VoiceClient.speak(message.content, message.guild)
 
