@@ -261,16 +261,19 @@ URLの前に「shuffle」と書くと、
         queue_message = f"👇順番待ちの曲なのだ ( {page} / {(queue_count + QUEUE_SHOW_COUNT - 1) // QUEUE_SHOW_COUNT} ページ)👇"
         for i, item in enumerate(
             self.music_queue,
-            start = (page - 1) * QUEUE_SHOW_COUNT
+            start = 1
         ):
+            if i <= (page - 1) * QUEUE_SHOW_COUNT:
+                continue
+
             if page * QUEUE_SHOW_COUNT <= i:
-                queue_message += f"\n・・・あと{len(self.music_queue) - i}曲あるのだ。\nsora queue <page>"
+                queue_message += f"\n合計で{len(self.music_queue)}曲あるのだ。 ( {page} / {(queue_count + QUEUE_SHOW_COUNT - 1) // QUEUE_SHOW_COUNT} ページ)\n次のページはsora queue {page + 1} で見るのだ。"
                 break
 
             title = item['title']
             duration = item['duration']
 
-            queue_message += f"\n{i + 1}. [ {int(duration // 60):02}:{int(duration % 60):02} ] {title}"
+            queue_message += f"\n{i}. [ {int(duration // 60):02}:{int(duration % 60):02} ] {title}"
 
         await ctx.message.reply(queue_message)
 
