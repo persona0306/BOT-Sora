@@ -9,11 +9,11 @@ from discord import PCMVolumeTransformer
 from discord.ext import commands
 import yt_dlp
 
-from . import core
-
-MAX_QUEUE_SHOW_COUNT = 9
+QUEUE_SHOW_COUNT = 10
 
 PROGRESS_BAR = ["▁", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
+
+PROGRESS_BAR_LENGTH = 15
 
 class Music(commands.Cog):
 
@@ -31,7 +31,7 @@ class Music(commands.Cog):
         help="""音楽を検索して、順番待ちに割り込むのだ。"""
     )
     async def insert(self, ctx):
-        args = ctx.message.content[7 + len(core.bot.command_prefix):]
+        args = ctx.message.content[7 + len(self.bot.command_prefix):]
         logging.info("Insert command called with query: %s", args)
 
         args_parts = args.split(maxsplit=1)
@@ -67,7 +67,7 @@ class Music(commands.Cog):
 再生中の曲があるときは、順番待ちに入れるのだ。"""
     )
     async def play(self, ctx):
-        query = ctx.message.content[5 + len(core.bot.command_prefix):]
+        query = ctx.message.content[5 + len(self.bot.command_prefix):]
         logging.info("music command called with arg: %s", query)
 
         if query == '':
@@ -101,7 +101,7 @@ URLの前に「shuffle」と書くと、
 このコマンドの後に「sora shuffle」を使うのだ。"""
     )
     async def playlist(self, ctx):
-        query = ctx.message.content[9 + len(core.bot.command_prefix):]
+        query = ctx.message.content[9 + len(self.bot.command_prefix):]
         logging.info("music command called with arg: %s", query)
 
         shuffle = False
@@ -117,8 +117,9 @@ URLの前に「shuffle」と書くと、
     @commands.command(
         name="queue",
         brief="順番待ちの曲を見るのだ。",
-        usage="sora queue",
-        help="""順番待ちの曲を見るのだ。"""
+        usage="sora queue (<page>)",
+        help="""順番待ちの曲を見るのだ。
+ページを指定すると、そのページの曲を見るのだ。"""
     )
     async def queue(self, ctx):
         await self.show_queue(ctx)
@@ -134,7 +135,7 @@ URLの前に「shuffle」と書くと、
 プレイリストを入れた後にシャッフルするのだ。"""
     )
     async def shuffle(self, ctx):
-        query = ctx.message.content[8 + len(core.bot.command_prefix):]
+        query = ctx.message.content[8 + len(self.bot.command_prefix):]
 
         logging.info("Shuffle command called with arg: %s", query)
 
@@ -152,10 +153,13 @@ URLの前に「shuffle」と書くと、
         usage="sora skip <飛ばしたい曲の番号> <範囲>",
         help="""再生中の音楽を飛ばして、次の曲に進むのだ。
 数字を入れると、順番待ちの位置を選んで飛ばせるのだ。
-数字を2つ入れると、1番目の数字から、2番目の数字までの間を飛ばすのだ。"""
+数字を2つ入れると、1番目の数字から、2番目の数字までの間を飛ばすのだ。
+例: sora skip 3 で、3番目の曲を飛ばす。
+例: sora skip 2 5 で、2番目から5番目までの4曲を飛ばす。
+例: sora skip 1 9999 で、全曲を飛ばす。"""
     )
     async def skip(self, ctx):
-        args = ctx.message.content[5 + len(core.bot.command_prefix):].split()
+        args = ctx.message.content[5 + len(self.bot.command_prefix):].split()
         logging.info("skip command called with args: %s", args)
 
         voice_client = ctx.message.guild.voice_client
@@ -194,6 +198,9 @@ URLの前に「shuffle」と書くと、
             logging.info("Skipping %d songs starting from %d", skip_count, start_index)
 
             for i in range(skip_count):
+                if start_index >= len(self.music_queue):
+                    skip_count = i
+                    break
                 self.music_queue.pop(start_index)
 
             await ctx.message.reply(f"キューの曲を {skip_count}曲 消したのだ。")
@@ -244,16 +251,37 @@ URLの前に「shuffle」と書くと、
             await ctx.message.reply("順番待ちの曲がないのだ。")
             return
 
-        queue_message = "👇順番待ちの曲なのだ👇"
-        for i, item in enumerate(self.music_queue):
-            if MAX_QUEUE_SHOW_COUNT <= i:
-                queue_message += f"\n・・・あと{len(self.music_queue) - i}曲あるのだ"
+        page = 1
+        arg = ctx.message.content[6 + len(self.bot.command_prefix):]
+        if arg.isdigit():
+            page = int(arg)
+            if page < 1:
+                page = 1
+        
+        queue_count = len(self.music_queue)
+        
+        if queue_count <= (page - 1) * QUEUE_SHOW_COUNT:
+            await ctx.message.reply(f"そのページには曲がないのだ。({queue_count}曲しかないのだ。)")
+            return
+
+        max_page = (queue_count + QUEUE_SHOW_COUNT - 1) // QUEUE_SHOW_COUNT
+        queue_message = f"👇順番待ちの曲なのだ ( {page} / {max_page} ページ )👇"
+        for i, item in enumerate(
+            self.music_queue,
+            start = 1
+        ):
+            if i <= (page - 1) * QUEUE_SHOW_COUNT:
+                continue
+
+            if page * QUEUE_SHOW_COUNT <= i:
+                queue_message += f"\n合計で{len(self.music_queue)}曲あるのだ。 ( {page} / {max_page} ページ )\n" \
+                    f"次のページは 「sora queue {page + 1}」 で見るのだ。"
                 break
 
             title = item['title']
             duration = item['duration']
 
-            queue_message += f"\n{i + 1}. [ {int(duration // 60):02}:{int(duration % 60):02} ] {title}"
+            queue_message += f"\n{i}. [ {int(duration // 60):02}:{int(duration % 60):02} ] {title}"
 
         await ctx.message.reply(queue_message)
 
@@ -284,7 +312,7 @@ URLの前に「shuffle」と書くと、
                 url2,
                 before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
             ),
-            volume=0.01
+            volume=0.03
         )
 
         playback_finished = asyncio.Event()
@@ -297,7 +325,7 @@ URLの前に「shuffle」と書くと、
         logging.info("Playing music: [%s] %s (%s)", duration, title, url2)
         voice_client.play(source, after=after_playing)
 
-        message = await core.bot_data.channel.send(f"再生中なのだ👉 {title}")
+        message = await self.bot.get_cog("VoiceClient").channel.send(f"再生中なのだ👉 {title}")
 
         start_time = time.time()
         while voice_client.is_playing():
@@ -309,10 +337,10 @@ URLの前に「shuffle」と書くと、
 
             progress = elapsed_time / duration
 
-            progress_bar_prefix = PROGRESS_BAR[8] * (int(progress * 20))
-            progress_bar_suffix = PROGRESS_BAR[0] * (19 - int(progress * 20))
+            progress_bar_prefix = PROGRESS_BAR[8] * (int(progress * PROGRESS_BAR_LENGTH))
+            progress_bar_suffix = PROGRESS_BAR[0] * (PROGRESS_BAR_LENGTH - int(progress * PROGRESS_BAR_LENGTH) - 1)
 
-            progress_bar_middle = PROGRESS_BAR[int((progress * 20) % 1 * 8)]
+            progress_bar_middle = PROGRESS_BAR[int((progress * PROGRESS_BAR_LENGTH) % 1 * 8)]
 
             progress_bar = f"{progress_bar_prefix}{progress_bar_middle}{progress_bar_suffix} [ {minutes:02}:{seconds:02} / {duration // 60:02}:{duration % 60:02} ]"
 
@@ -381,13 +409,13 @@ URLの前に「shuffle」と書くと、
                 time.sleep(1)
                 continue
 
-            voice_client = core.bot.voice_clients[0]
+            voice_client = self.bot.voice_clients[0]
             if voice_client is None or voice_client.is_playing():
                 time.sleep(1)
                 continue
 
             logging.info("play_loop: Playing next music")
             url = self.music_queue.pop(0)
-            asyncio.run_coroutine_threadsafe(self.stream_music(voice_client, url), core.bot.loop)
+            asyncio.run_coroutine_threadsafe(self.stream_music(voice_client, url), self.bot.loop)
             while not voice_client.is_playing():
                 time.sleep(1)
