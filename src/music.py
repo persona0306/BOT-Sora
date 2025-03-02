@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from logging.handlers import TimedRotatingFileHandler
 import random
 import threading
 import time
