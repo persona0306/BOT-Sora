@@ -195,6 +195,9 @@ URLの前に「shuffle」と書くと、
             logging.info("Skipping %d songs starting from %d", skip_count, start_index)
 
             for i in range(skip_count):
+                if start_index >= len(self.music_queue):
+                    skip_count = i
+                    break
                 self.music_queue.pop(start_index)
 
             await ctx.message.reply(f"キューの曲を {skip_count}曲 消したのだ。")

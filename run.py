@@ -24,6 +24,5 @@ if DISCORD_BOT_TOKEN is None:
 # Run the bot
 core.bot.run(
     DISCORD_BOT_TOKEN,
-    log_handler = handler,
     log_level = logging.DEBUG
 )
