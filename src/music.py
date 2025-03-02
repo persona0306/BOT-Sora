@@ -358,7 +358,14 @@ URLの前に「shuffle」と書くと、
             random.shuffle(playlist_entries)
             logging.info("Shuffled playlist")
 
+        enrty_count = len(playlist_entries)
+
         for entry in playlist_entries:
+            if entry.get('duration') is None:
+                enrty_count -= 1
+                logging.info("Skipping invalid entry: %s", entry)
+                continue
+
             yt_item = {
                 'url': entry['url'],
                 'title': entry.get('title', 'Unknown title'),
@@ -367,7 +374,7 @@ URLの前に「shuffle」と書くと、
             self.music_queue.append(yt_item)
             logging.info("Added to queue: [%s] %s (%s)", yt_item.get('duration'), yt_item.get('title'), yt_item.get('url'))
 
-        await ctx.message.reply(f"{len(playlist_entries)} 曲を順番待ちに入れたのだ。")
+        await ctx.message.reply(f"{enrty_count} 曲を順番待ちに入れたのだ。")
         logging.info(f"Queued {len(playlist_entries)} songs from playlist: {playlist_entries}")
 
         voice_client = ctx.message.guild.voice_client
