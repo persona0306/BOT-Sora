@@ -65,8 +65,6 @@ bot = commands.Bot(
     intents=intents
 )
 
-conversation_history = []
-
 @bot.event
 async def on_ready():
     logging.info("- BOT Sora Ready -")
@@ -87,13 +85,16 @@ async def on_message(message: Message):
         await bot.process_commands(message)
     else:
         logging.info("Message is not a command, processing as chat.")
-        
+
+        client = bot.get_cog("VoiceClient")
+
         logging.info("message.channel: %s", message.channel)
-        logging.info("VoiceClient.channel: %s", VoiceClient.channel)
-        if message.channel != VoiceClient.channel:
+        logging.info("VoiceClient.channel: %s", client.channel)
+        
+        if message.channel != client.channel:
             logging.info("Message not in VoiceClient.channel, ignoring.")
             return
-        await VoiceClient.speak(message.content, message.guild)
+        await client.speak(message.content, message.guild)
 
 @bot.command(
     name="ai",
@@ -108,6 +109,8 @@ async def on_message(message: Message):
 async def ai(ctx):
     content = ctx.message.content[7:]
     logging.info("AI command received with content: %s", content)
+
+    conversation_history = bot.get_cog("VoiceClient").conversation_history
 
     # Add the new user message to the conversation history
     conversation_history.append({"role": "user", "content": content})
@@ -136,7 +139,9 @@ async def ai(ctx):
         await ctx.message.reply(response_message)
         logging.info("Replied to user")
 
-        await VoiceClient.speak(
+        client = bot.get_cog("VoiceClient")
+
+        await client.speak(
             response_message,
             ctx.message.guild
         )
@@ -166,19 +171,21 @@ async def roulette(ctx):
         await ctx.message.reply('sora roulette <選択肢1> <選択肢2> (<選択肢3> ...)')
         return
     async with channel.typing():
-        await VoiceClient.speak(
+        client = bot.get_cog("VoiceClient")
+
+        await client.speak(
             'だららららららららららららららら',
             channel.guild
         )
         await asyncio.sleep(3)
-        await VoiceClient.speak(
+        await client.speak(
             'じゃん！',
             channel.guild
         )
         await asyncio.sleep(1)
         index = random.randrange(len(elements))
         await ctx.message.reply(elements[index])
-        await VoiceClient.speak(
+        await client.speak(
             elements[index],
             channel.guild
         )
