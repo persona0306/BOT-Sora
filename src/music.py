@@ -258,12 +258,12 @@ URLの前に「shuffle」と書くと、
             await ctx.message.reply(f"そのページには曲がないのだ。({queue_count}曲しかないのだ。)")
             return
 
-        queue_message = f"👇順番待ちの曲なのだ ( {page} / {1 + (queue_count + QUEUE_SHOW_COUNT - 1) // QUEUE_SHOW_COUNT} ページ)👇"
+        queue_message = f"👇順番待ちの曲なのだ ( {page} / {(queue_count + QUEUE_SHOW_COUNT - 1) // QUEUE_SHOW_COUNT} ページ)👇"
         for i, item in enumerate(
             self.music_queue,
             start = (page - 1) * QUEUE_SHOW_COUNT
         ):
-            if QUEUE_SHOW_COUNT <= i:
+            if page * QUEUE_SHOW_COUNT <= i:
                 queue_message += f"\n・・・あと{len(self.music_queue) - i}曲あるのだ。\nsora queue <page>"
                 break
 
