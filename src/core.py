@@ -53,7 +53,7 @@ bot = commands.Bot(
 )
 
 @bot.event
-async def setup_hook():
+async def on_ready():
     await bot.change_presence(
         activity=discord.Game(name="起動中..."),
         status=discord.Status.do_not_disturb
