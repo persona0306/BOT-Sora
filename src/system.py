@@ -6,7 +6,7 @@ import sys
 from discord.ext import commands
 import discord
 
-log_file_dir = None
+log_file_dir = "./log"
 
 class System(commands.Cog):
     

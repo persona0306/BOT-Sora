@@ -16,7 +16,7 @@ from .voice_client import VoiceClient
 from . import voice_client
 
 # Configure logging
-log_file_dir = None
+log_file_dir = "./log"
 
 log_file_path = log_file_dir + "/sora_log"
 handler = TimedRotatingFileHandler(log_file_path, when="H", interval=1, backupCount=24 * 31)
