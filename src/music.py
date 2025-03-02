@@ -259,7 +259,7 @@ URLの前に「shuffle」と書くと、
             return
 
         max_page = (queue_count + QUEUE_SHOW_COUNT - 1) // QUEUE_SHOW_COUNT
-        queue_message = f"👇順番待ちの曲なのだ ( {page} / {max_page} ページ)👇"
+        queue_message = f"👇順番待ちの曲なのだ ( {page} / {max_page} ページ )👇"
         for i, item in enumerate(
             self.music_queue,
             start = 1
@@ -268,7 +268,7 @@ URLの前に「shuffle」と書くと、
                 continue
 
             if page * QUEUE_SHOW_COUNT <= i:
-                queue_message += f"\n合計で{len(self.music_queue)}曲あるのだ。 ( {page} / {max_page} ページ)\n" \
+                queue_message += f"\n合計で{len(self.music_queue)}曲あるのだ。 ( {page} / {max_page} ページ )\n" \
                     "次のページは 「sora queue {page + 1}」 で見るのだ。"
                 break
 
