@@ -12,6 +12,7 @@ if not os.path.exists(log_file_dir):
 log_file_path = log_file_dir + "/sora_log"
 handler = TimedRotatingFileHandler(log_file_path, when="H", interval=1, backupCount=24 * 31)
 
+core.log_file_dir = log_file_dir
 system.log_file_dir = log_file_dir
 
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
