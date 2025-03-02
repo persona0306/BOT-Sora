@@ -13,6 +13,8 @@ from . import core
 
 MAX_QUEUE_SHOW_COUNT = 9
 
+PROGRESS_BAR = ["▁", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
+
 class Music(commands.Cog):
 
     music_queue = []
@@ -307,7 +309,17 @@ URLの前に「shuffle」と書くと、
                 break
 
             minutes, seconds = divmod(int(elapsed_time), 60)
-            await message.edit(content=f"再生中なのだ👉 [ {minutes:02}:{seconds:02} / {duration // 60:02}:{duration % 60:02} ] {title}")
+
+            progress = elapsed_time / duration
+
+            progress_bar_prefix = PROGRESS_BAR[8] * (int(progress * 20))
+            progress_bar_suffix = PROGRESS_BAR[0] * (19 - int(progress * 20))
+
+            progress_bar_middle = PROGRESS_BAR[int((progress * 20) % 1 * 8)]
+
+            progress_bar = f"{progress_bar_prefix}{progress_bar_middle}{progress_bar_suffix} [ {minutes:02}:{seconds:02} / {duration // 60:02}:{duration % 60:02} ]"
+
+            await message.edit(content=f"再生中なのだ👉 {title} \n{progress_bar}")
             await asyncio.sleep(0.8)
 
         await playback_finished.wait()
