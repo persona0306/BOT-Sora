@@ -77,7 +77,12 @@ class Music(commands.Cog):
         yt_item = self.get_youtube_url(query)
 
         voice_client = ctx.message.guild.voice_client
-        if voice_client and voice_client.is_playing():
+        if not voice_client:
+            await ctx.message.reply("ボクはまだVCに入ってないのだ。まずは「sora join」コマンドを使うのだ。")
+            logging.info("Not connected to a voice channel")
+            return
+        
+        if voice_client.is_playing():
             self.music_queue.append(yt_item)
             await ctx.message.reply(f"曲をキューに追加したのだ: {yt_item.get('title')}")
             logging.info("Added to queue: [%s] %s (%s)", yt_item.get('duration'), yt_item.get('title'), yt_item.get('url'))
@@ -252,24 +257,15 @@ URLの前に「shuffle」と書くと、
 
         await ctx.message.reply(queue_message)
 
-    async def stream_music(self, ctx, item):
+    async def stream_music(self, voice_client, item):
         url = item['url']
 
         logging.info("stream_music called with Music Item: %s", item)
 
         if url == '':
-            await ctx.message.reply("sora music <曲名>で曲を指定するのだ。")
             logging.info("No URL provided")
             return
-        logging.info("stream_music called with URL: %s", url)
-
-        voice_client = ctx.message.guild.voice_client
-        logging.info("Connected to voice channel")
-        if voice_client is None:
-            await ctx.message.reply("ボクはまだVCに入ってないのだ。まずは「sora join」コマンドを使うのだ。")
-            logging.info("Not connected to a voice channel")
-            return
-        logging.info("Connected to voice channel")
+        
         ydl_opts = {
             'format': 'bestaudio/best',
             'quiet': True,
@@ -301,7 +297,7 @@ URLの前に「shuffle」と書くと、
         logging.info("Playing music: [%s] %s (%s)", duration, title, url2)
         voice_client.play(source, after=after_playing)
 
-        message = await ctx.message.channel.send(f"再生中なのだ👉 {title}")
+        message = await core.bot_data.channel.send(f"再生中なのだ👉 {title}")
 
         start_time = time.time()
         while voice_client.is_playing():
@@ -394,6 +390,6 @@ URLの前に「shuffle」と書くと、
 
             logging.info("play_loop: Playing next music")
             url = self.music_queue.pop(0)
-            asyncio.run_coroutine_threadsafe(self.stream_music(core.bot.get_channel(voice_client.channel.id), url), core.bot.loop)
+            asyncio.run_coroutine_threadsafe(self.stream_music(voice_client, url), core.bot.loop)
             while not voice_client.is_playing():
                 time.sleep(1)
