@@ -1,7 +1,7 @@
 import asyncio
 import logging
-from logging.handlers import TimedRotatingFileHandler
 import random
+import threading
 import time
 
 from discord import FFmpegPCMAudio
@@ -21,6 +21,8 @@ class Music(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.play_loop_thread = threading.Thread(target=self.play_loop)
+        self.play_loop_thread.start()
     
     @commands.command(
         name="insert",
@@ -75,7 +77,12 @@ class Music(commands.Cog):
         yt_item = self.get_youtube_url(query)
 
         voice_client = ctx.message.guild.voice_client
-        if voice_client and voice_client.is_playing():
+        if not voice_client:
+            await ctx.message.reply("ボクはまだVCに入ってないのだ。まずは「sora join」コマンドを使うのだ。")
+            logging.info("Not connected to a voice channel")
+            return
+        
+        if voice_client.is_playing():
             self.music_queue.append(yt_item)
             await ctx.message.reply(f"曲をキューに追加したのだ: {yt_item.get('title')}")
             logging.info("Added to queue: [%s] %s (%s)", yt_item.get('duration'), yt_item.get('title'), yt_item.get('url'))
@@ -250,22 +257,15 @@ URLの前に「shuffle」と書くと、
 
         await ctx.message.reply(queue_message)
 
-    async def stream_music(self, ctx, item):
+    async def stream_music(self, voice_client, item):
         url = item['url']
 
         logging.info("stream_music called with Music Item: %s", item)
 
         if url == '':
-            await ctx.message.reply("sora music <曲名>で曲を指定するのだ。")
             logging.info("No URL provided")
             return
-
-        voice_client = ctx.message.guild.voice_client
-        if voice_client is None:
-            await ctx.message.reply("ボクはまだVCに入ってないのだ。まずは「sora join」コマンドを使うのだ。")
-            logging.info("Not connected to a voice channel")
-            return
-
+        
         ydl_opts = {
             'format': 'bestaudio/best',
             'quiet': True,
@@ -293,14 +293,11 @@ URLの前に「shuffle」と書くと、
             if error:
                 logging.error(f"Error while playing: {error}")
             playback_finished.set()
-            if self.music_queue:
-                next_url = self.music_queue.pop(0)
-                asyncio.run_coroutine_threadsafe(self.stream_music(ctx, next_url), core.bot.loop)
 
         logging.info("Playing music: [%s] %s (%s)", duration, title, url2)
         voice_client.play(source, after=after_playing)
 
-        message = await ctx.message.channel.send(f"再生中なのだ👉 {title}")
+        message = await core.bot_data.channel.send(f"再生中なのだ👉 {title}")
 
         start_time = time.time()
         while voice_client.is_playing():
@@ -358,7 +355,14 @@ URLの前に「shuffle」と書くと、
             random.shuffle(playlist_entries)
             logging.info("Shuffled playlist")
 
+        enrty_count = len(playlist_entries)
+
         for entry in playlist_entries:
+            if entry.get('duration') is None:
+                enrty_count -= 1
+                logging.info("Skipping invalid entry: %s", entry)
+                continue
+
             yt_item = {
                 'url': entry['url'],
                 'title': entry.get('title', 'Unknown title'),
@@ -367,11 +371,25 @@ URLの前に「shuffle」と書くと、
             self.music_queue.append(yt_item)
             logging.info("Added to queue: [%s] %s (%s)", yt_item.get('duration'), yt_item.get('title'), yt_item.get('url'))
 
-        await ctx.message.reply(f"{len(playlist_entries)} 曲を順番待ちに入れたのだ。")
+        await ctx.message.reply(f"{enrty_count} 曲を順番待ちに入れたのだ。")
         logging.info(f"Queued {len(playlist_entries)} songs from playlist: {playlist_entries}")
 
-        voice_client = ctx.message.guild.voice_client
-        if voice_client is None or not voice_client.is_playing():
-            logging.info("No music is playing, starting playback")
+    def play_loop(self):
+        logging.info("Play loop started")
+        while True:
+            if not self.music_queue:
+                logging.info("play_loop: No music in queue")
+                time.sleep(1)
+                continue
+
+            voice_client = core.bot.voice_clients[0]
+            if voice_client is None or voice_client.is_playing():
+                logging.info("play_loop: Voice client is not connected or playing")
+                time.sleep(1)
+                continue
+
+            logging.info("play_loop: Playing next music")
             url = self.music_queue.pop(0)
-            await self.stream_music(ctx, url)
+            asyncio.run_coroutine_threadsafe(self.stream_music(voice_client, url), core.bot.loop)
+            while not voice_client.is_playing():
+                time.sleep(1)

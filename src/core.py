@@ -35,7 +35,7 @@ Initializing BOT Sora CORE...
 
 class BotData:
     speaker = 3
-    read_channel = None
+    channel = None
     conversation_history = []
 
 VOICEVOX_URL = os.getenv("VOICEVOX_URL")
@@ -92,8 +92,8 @@ async def on_message(message: discord.Message):
     else:
         logging.info("Message is not a command, processing as chat.")
         
-        if message.channel != bot_data.read_channel:
-            logging.info("Message not in read_channel, ignoring.")
+        if message.channel != bot_data.channel:
+            logging.info("Message not in bot_data.channel, ignoring.")
             return
         await speak(message.content, message.guild)
 
@@ -192,8 +192,8 @@ async def join(ctx):
     await sender_vc.connect()
     logging.info("Connected to voice channel")
     
-    bot_data.read_channel = ctx.message.channel
-    logging.info("Set read_channel to: %s", bot_data.read_channel)
+    bot_data.channel = ctx.message.channel
+    logging.info("Set bot_data.channel to: %s", bot_data.channel)
     
     await speak(
         'ぼっとそらなのだ。呼んだのだ？',
@@ -293,7 +293,7 @@ async def speak(message, guild):
         logging.info("cache file exists")
         source = discord.PCMVolumeTransformer(
             discord.FFmpegPCMAudio(file_path),
-            volume=0.2
+            volume=0.1
         )
         guild.voice_client.play(source)
         return
@@ -314,7 +314,7 @@ async def speak(message, guild):
     
     source = discord.PCMVolumeTransformer(
         discord.FFmpegPCMAudio(file_path),
-        volume=0.2
+        volume=0.1
     )
     guild.voice_client.play(source)
 
