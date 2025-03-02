@@ -261,13 +261,15 @@ URLの前に「shuffle」と書くと、
             await ctx.message.reply("sora music <曲名>で曲を指定するのだ。")
             logging.info("No URL provided")
             return
+        logging.info("stream_music called with URL: %s", url)
 
         voice_client = ctx.message.guild.voice_client
+        logging.info("Connected to voice channel")
         if voice_client is None:
             await ctx.message.reply("ボクはまだVCに入ってないのだ。まずは「sora join」コマンドを使うのだ。")
             logging.info("Not connected to a voice channel")
             return
-
+        logging.info("Connected to voice channel")
         ydl_opts = {
             'format': 'bestaudio/best',
             'quiet': True,
@@ -377,15 +379,21 @@ URLの前に「shuffle」と書くと、
         logging.info(f"Queued {len(playlist_entries)} songs from playlist: {playlist_entries}")
 
     def play_loop(self):
+        logging.info("Play loop started")
         while True:
             if not self.music_queue:
+                logging.info("play_loop: No music in queue")
                 time.sleep(1)
                 continue
 
             voice_client = core.bot.voice_clients[0]
             if voice_client is None or voice_client.is_playing():
+                logging.info("play_loop: Voice client is not connected or playing")
                 time.sleep(1)
                 continue
 
+            logging.info("play_loop: Playing next music")
             url = self.music_queue.pop(0)
             asyncio.run_coroutine_threadsafe(self.stream_music(core.bot.get_channel(voice_client.channel.id), url), core.bot.loop)
+            while not voice_client.is_playing():
+                time.sleep(1)
