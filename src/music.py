@@ -258,7 +258,8 @@ URLの前に「shuffle」と書くと、
             await ctx.message.reply(f"そのページには曲がないのだ。({queue_count}曲しかないのだ。)")
             return
 
-        queue_message = f"👇順番待ちの曲なのだ ( {page} / {(queue_count + QUEUE_SHOW_COUNT - 1) // QUEUE_SHOW_COUNT} ページ)👇"
+        max_page = (queue_count + QUEUE_SHOW_COUNT - 1) // QUEUE_SHOW_COUNT
+        queue_message = f"👇順番待ちの曲なのだ ( {page} / {max_page} ページ )👇"
         for i, item in enumerate(
             self.music_queue,
             start = 1
@@ -267,7 +268,8 @@ URLの前に「shuffle」と書くと、
                 continue
 
             if page * QUEUE_SHOW_COUNT <= i:
-                queue_message += f"\n合計で{len(self.music_queue)}曲あるのだ。 ( {page} / {(queue_count + QUEUE_SHOW_COUNT - 1) // QUEUE_SHOW_COUNT} ページ)\n次のページはsora queue {page + 1} で見るのだ。"
+                queue_message += f"\n合計で{len(self.music_queue)}曲あるのだ。 ( {page} / {max_page} ページ )\n" \
+                    "次のページは 「sora queue {page + 1}」 で見るのだ。"
                 break
 
             title = item['title']
