@@ -9,8 +9,6 @@ from discord import PCMVolumeTransformer
 from discord.ext import commands
 import yt_dlp
 
-from . import core
-
 MAX_QUEUE_SHOW_COUNT = 9
 
 PROGRESS_BAR = ["▁", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
@@ -31,7 +29,7 @@ class Music(commands.Cog):
         help="""音楽を検索して、順番待ちに割り込むのだ。"""
     )
     async def insert(self, ctx):
-        args = ctx.message.content[7 + len(core.bot.command_prefix):]
+        args = ctx.message.content[7 + len(self.bot.command_prefix):]
         logging.info("Insert command called with query: %s", args)
 
         args_parts = args.split(maxsplit=1)
@@ -67,7 +65,7 @@ class Music(commands.Cog):
 再生中の曲があるときは、順番待ちに入れるのだ。"""
     )
     async def play(self, ctx):
-        query = ctx.message.content[5 + len(core.bot.command_prefix):]
+        query = ctx.message.content[5 + len(self.bot.command_prefix):]
         logging.info("music command called with arg: %s", query)
 
         if query == '':
@@ -101,7 +99,7 @@ URLの前に「shuffle」と書くと、
 このコマンドの後に「sora shuffle」を使うのだ。"""
     )
     async def playlist(self, ctx):
-        query = ctx.message.content[9 + len(core.bot.command_prefix):]
+        query = ctx.message.content[9 + len(self.bot.command_prefix):]
         logging.info("music command called with arg: %s", query)
 
         shuffle = False
@@ -134,7 +132,7 @@ URLの前に「shuffle」と書くと、
 プレイリストを入れた後にシャッフルするのだ。"""
     )
     async def shuffle(self, ctx):
-        query = ctx.message.content[8 + len(core.bot.command_prefix):]
+        query = ctx.message.content[8 + len(self.bot.command_prefix):]
 
         logging.info("Shuffle command called with arg: %s", query)
 
@@ -155,7 +153,7 @@ URLの前に「shuffle」と書くと、
 数字を2つ入れると、1番目の数字から、2番目の数字までの間を飛ばすのだ。"""
     )
     async def skip(self, ctx):
-        args = ctx.message.content[5 + len(core.bot.command_prefix):].split()
+        args = ctx.message.content[5 + len(self.bot.command_prefix):].split()
         logging.info("skip command called with args: %s", args)
 
         voice_client = ctx.message.guild.voice_client
@@ -297,7 +295,7 @@ URLの前に「shuffle」と書くと、
         logging.info("Playing music: [%s] %s (%s)", duration, title, url2)
         voice_client.play(source, after=after_playing)
 
-        message = await core.bot_data.channel.send(f"再生中なのだ👉 {title}")
+        message = await self.bot_data.channel.send(f"再生中なのだ👉 {title}")
 
         start_time = time.time()
         while voice_client.is_playing():
@@ -381,13 +379,13 @@ URLの前に「shuffle」と書くと、
                 time.sleep(1)
                 continue
 
-            voice_client = core.bot.voice_clients[0]
+            voice_client = self.bot.voice_clients[0]
             if voice_client is None or voice_client.is_playing():
                 time.sleep(1)
                 continue
 
             logging.info("play_loop: Playing next music")
             url = self.music_queue.pop(0)
-            asyncio.run_coroutine_threadsafe(self.stream_music(voice_client, url), core.bot.loop)
+            asyncio.run_coroutine_threadsafe(self.stream_music(voice_client, url), self.bot.loop)
             while not voice_client.is_playing():
                 time.sleep(1)

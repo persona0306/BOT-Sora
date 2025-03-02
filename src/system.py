@@ -94,6 +94,3 @@ class System(commands.Cog):
                 await ctx.message.reply(f"更新に失敗したのだ・・・。\n{result.stderr}")
         except Exception as e:
             await ctx.message.reply(f"更新中にエラーが発生したのだ・・・。\n{e}")
-
-def setup(bot):
-    bot.add_cog(System(bot))
