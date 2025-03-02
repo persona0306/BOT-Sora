@@ -378,13 +378,11 @@ URLの前に「shuffle」と書くと、
         logging.info("Play loop started")
         while True:
             if not self.music_queue:
-                logging.info("play_loop: No music in queue")
                 time.sleep(1)
                 continue
 
             voice_client = core.bot.voice_clients[0]
             if voice_client is None or voice_client.is_playing():
-                logging.info("play_loop: Voice client is not connected or playing")
                 time.sleep(1)
                 continue
 
