@@ -15,6 +15,7 @@ VOICEVOX_URL = os.getenv("VOICEVOX_URL")
 class VoiceClient(commands.Cog):
     character = 3
     channel = None
+    conversation_history = []
 
     def __init__(self, bot):
         self.bot = bot
@@ -108,7 +109,7 @@ class VoiceClient(commands.Cog):
         except ValueError:
             await ctx.message.channel.send('数字で入力してください。\n例(ずんだもん)：sora speaker 3')
 
-    async def speak(self, message, guild):
+    async def speak(self, message: str, guild: discord.Guild):
         if (len(message) > MAX_SPEAK_LENGTH):
             return
 
