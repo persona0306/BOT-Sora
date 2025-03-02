@@ -13,6 +13,8 @@ MAX_QUEUE_SHOW_COUNT = 9
 
 PROGRESS_BAR = ["▁", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
 
+PROGRESS_BAR_LENGTH = 15
+
 class Music(commands.Cog):
 
     music_queue = []
@@ -282,7 +284,7 @@ URLの前に「shuffle」と書くと、
                 url2,
                 before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
             ),
-            volume=0.02
+            volume=0.03
         )
 
         playback_finished = asyncio.Event()
@@ -307,10 +309,10 @@ URLの前に「shuffle」と書くと、
 
             progress = elapsed_time / duration
 
-            progress_bar_prefix = PROGRESS_BAR[8] * (int(progress * 20))
-            progress_bar_suffix = PROGRESS_BAR[0] * (19 - int(progress * 20))
+            progress_bar_prefix = PROGRESS_BAR[8] * (int(progress * PROGRESS_BAR_LENGTH))
+            progress_bar_suffix = PROGRESS_BAR[0] * (PROGRESS_BAR_LENGTH - int(progress * PROGRESS_BAR_LENGTH) - 1)
 
-            progress_bar_middle = PROGRESS_BAR[int((progress * 20) % 1 * 8)]
+            progress_bar_middle = PROGRESS_BAR[int((progress * PROGRESS_BAR_LENGTH) % 1 * 8)]
 
             progress_bar = f"{progress_bar_prefix}{progress_bar_middle}{progress_bar_suffix} [ {minutes:02}:{seconds:02} / {duration // 60:02}:{duration % 60:02} ]"
 
