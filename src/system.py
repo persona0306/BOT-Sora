@@ -36,9 +36,16 @@ class System(commands.Cog):
         logging.info("Creating zip file...")
 
         zip_file_path = os.path.join(log_file_dir, "sora_logs.zip")
-        with zipfile.ZipFile(zip_file_path, 'w') as zipf:
+        with zipfile.ZipFile(
+            zip_file_path,
+            'w',
+            zipfile.ZIP_DEFLATED
+        ) as zipf:
             for log_file in log_files:
-                zipf.write(log_file, os.path.basename(log_file) + ".txt")
+                zipf.write(
+                    log_file,
+                    os.path.basename(log_file) + ".txt"
+                )
 
         logging.info("Sending zip file...")
 
