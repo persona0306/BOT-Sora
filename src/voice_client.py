@@ -345,8 +345,9 @@ class VoiceClient(commands.Cog):
                 continue
 
             if page * QUEUE_SHOW_COUNT <= i:
-                queue_message += f"\n合計で{len(self.audio.music_queue)}曲あるのだ。 ( {page} / {max_page} ページ )\n" \
-                    f"次のページは 「sora queue {page + 1}」 で見るのだ。"
+                queue_message += f"\n合計で{len(self.audio.music_queue)}曲あるのだ。 ( {page} / {max_page} ページ )"
+                if page == 1:
+                    queue_message += "\n次のページは 「sora queue 2」 で見るのだ。"
                 break
 
             title = item.title
