@@ -101,7 +101,7 @@ class YoutubeSource(discord.AudioSource):
             progress_bar_prefix = PROGRESS_BAR[8] * math.floor(progress * PROGRESS_BAR_LENGTH)
             progress_bar_suffix = PROGRESS_BAR[0] * (PROGRESS_BAR_LENGTH - math.floor(progress * PROGRESS_BAR_LENGTH))
 
-            progress_bar_middle = PROGRESS_BAR[int((progress * (1 + PROGRESS_BAR_LENGTH)) % 1 * 8)]
+            progress_bar_middle = PROGRESS_BAR[1 + int((progress * (1 + PROGRESS_BAR_LENGTH)) % 1 * 8)]
 
             progress_bar = f"{progress_bar_prefix}{progress_bar_middle}{progress_bar_suffix} [ {minutes:02}:{seconds:02} / {self.duration // 60:02}:{self.duration % 60:02} ]"
 
