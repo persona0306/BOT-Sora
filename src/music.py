@@ -78,6 +78,8 @@ class Music(commands.Cog):
                 title = yt_item['title'],
                 duration = yt_item['duration']
             )
+            await ctx.message.reply(f"曲を再生するのだ: {yt_item.get('title')}")
+            logging.info("Queued music: %s (%s)", yt_item.get('title'), yt_item.get('url'))
 
         asyncio.run_coroutine_threadsafe(
             queue(),

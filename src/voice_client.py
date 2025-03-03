@@ -1,4 +1,5 @@
 import logging
+import math
 import os
 
 import asyncio
@@ -97,8 +98,8 @@ class YoutubeSource(discord.AudioSource):
 
             progress = self.elapsed_time / self.duration / 1000
 
-            progress_bar_prefix = PROGRESS_BAR[8] * (int(progress * PROGRESS_BAR_LENGTH))
-            progress_bar_suffix = PROGRESS_BAR[0] * (PROGRESS_BAR_LENGTH - int(progress * PROGRESS_BAR_LENGTH))
+            progress_bar_prefix = PROGRESS_BAR[8] * math.floor(progress * PROGRESS_BAR_LENGTH)
+            progress_bar_suffix = PROGRESS_BAR[0] * (PROGRESS_BAR_LENGTH - math.floor(progress * PROGRESS_BAR_LENGTH))
 
             progress_bar_middle = PROGRESS_BAR[int((progress * (1 + PROGRESS_BAR_LENGTH)) % 1 * 8)]
 
