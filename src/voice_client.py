@@ -16,6 +16,8 @@ from .music import Music
 MAX_SPEAK_LENGTH = 256
 
 PROGRESS_BAR = ["▁", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
+
+# progress bar length is this value + 1 because of the middle character
 PROGRESS_BAR_LENGTH = 15
 
 QUEUE_SHOW_COUNT = 10
@@ -86,17 +88,19 @@ class YoutubeSource(discord.AudioSource):
                 send_message(),
                 self.bot.loop
             )
+        
+        audio_data = self.source.read()
 
         self.elapsed_time += 20
-        if self.message is not None and self.elapsed_time % MUSIC_PROGRESS_UPDATE_DELAY == 0:
+        if self.message is not None and (self.elapsed_time % MUSIC_PROGRESS_UPDATE_DELAY == 0 or audio_data == b''):
             minutes, seconds = divmod(self.elapsed_time // 1000, 60)
 
             progress = self.elapsed_time / self.duration / 1000
 
             progress_bar_prefix = PROGRESS_BAR[8] * (int(progress * PROGRESS_BAR_LENGTH))
-            progress_bar_suffix = PROGRESS_BAR[0] * (PROGRESS_BAR_LENGTH - int(progress * PROGRESS_BAR_LENGTH) - 1)
+            progress_bar_suffix = PROGRESS_BAR[0] * (PROGRESS_BAR_LENGTH - int(progress * PROGRESS_BAR_LENGTH))
 
-            progress_bar_middle = PROGRESS_BAR[int((progress * PROGRESS_BAR_LENGTH) % 1 * 8)]
+            progress_bar_middle = PROGRESS_BAR[int((progress * (1 + PROGRESS_BAR_LENGTH)) % 1 * 8)]
 
             progress_bar = f"{progress_bar_prefix}{progress_bar_middle}{progress_bar_suffix} [ {minutes:02}:{seconds:02} / {self.duration // 60:02}:{self.duration % 60:02} ]"
 
@@ -108,7 +112,7 @@ class YoutubeSource(discord.AudioSource):
                 self.bot.loop
             )
 
-        return self.source.read()
+        return audio_data
 
 class CombinedAudioSource(discord.AudioSource):
     def __init__(self, bot: commands.Bot):
