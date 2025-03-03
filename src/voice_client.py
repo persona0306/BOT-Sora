@@ -113,21 +113,21 @@ class YoutubeSource(discord.AudioSource):
 class CombinedAudioSource(discord.AudioSource):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.speak_queue = []
-        self.music_queue = []
-        self.current_speak_source = None
         self.current_music_source = None
+        self.current_speak_source = None
+        self.queue_music = []
+        self.queue_speak = []
 
     def add_speak_source(self, source):
-        self.speak_queue.append(source)
-        logging.info("Added speak source to audio queue, %d audios are in queue", len(self.speak_queue))
+        self.queue_speak.append(source)
+        logging.info("Added speak source to audio queue, %d audios are in queue", len(self.queue_speak))
     
     def add_music_source(self, source, position = None):
         if position is not None:
-            self.music_queue.insert(position, source)
+            self.queue_music.insert(position, source)
         else:
-            self.music_queue.append(source)
-        logging.info("Added music source to audio queue to position %d, %d audios are in queue", position, len(self.music_queue))
+            self.queue_music.append(source)
+        logging.info("Added music source to audio queue to position %d, %d audios are in queue", position, len(self.queue_music))
     
     def add_youtube_source(self, url, title, duration, position = None):
         source = YoutubeSource(self.bot, url, title, duration)
@@ -161,14 +161,14 @@ class CombinedAudioSource(discord.AudioSource):
             self.music_source.cleanup()
 
     def read(self):
-        if self.current_speak_source is None and self.speak_queue:
-            self.current_speak_source = self.speak_queue.pop(0)
+        if self.current_speak_source is None and self.queue_speak:
+            self.current_speak_source = self.queue_speak.pop(0)
             logging.info("Switched to next speak source")
-        if self.current_music_source is None and self.music_queue:
-            self.current_music_source = self.music_queue.pop(0)
+        if self.current_music_source is None and self.queue_music:
+            self.current_music_source = self.queue_music.pop(0)
             logging.info("Switched to next music source")
-            if self.music_queue is not None and isinstance(self.music_queue[0], YoutubeSource):
-                self.music_queue[0].download()
+            if self.queue_music is not None and isinstance(self.queue_music[0], YoutubeSource):
+                self.queue_music[0].download()
 
         speak_data = self.current_speak_source.read() if self.current_speak_source else None
         music_data = self.current_music_source.read() if self.current_music_source else None
@@ -194,7 +194,7 @@ class CombinedAudioSource(discord.AudioSource):
     def shuffle(self):
         if self.current_music_source is None:
             return
-        random.shuffle(self.music_queue)
+        random.shuffle(self.queue_music)
 
     def skip(self, start_position: str = None, skip_count = 1):
         success_skip_count = 0
@@ -204,9 +204,9 @@ class CombinedAudioSource(discord.AudioSource):
                 return success_skip_count
 
             for i in range(skip_count):
-                if start_position >= len(self.music_queue):
+                if start_position >= len(self.queue_music):
                     return success_skip_count
-                self.music_queue.pop(start_position)
+                self.queue_music.pop(start_position)
                 success_skip_count += 1
         else:
             self.current_music_source = None
@@ -287,7 +287,11 @@ class VoiceClient(commands.Cog):
             return
 
         voice_client.stop()
-        Music.music_queue.clear()
+        self.audio.queue_music.clear()
+        self.audio.queue_speak.clear()
+        self.audio.current_music_source = None
+        self.audio.current_speak_source = None
+        self.audio.cleanup()
 
         await self.speak(
             'じゃあね、なのだ',
@@ -319,7 +323,7 @@ class VoiceClient(commands.Cog):
             await ctx.message.channel.send('数字で入力してください。\n例(ずんだもん)：sora speaker 3')
 
     async def show_queue(self, ctx):
-        if not self.audio.music_queue:
+        if not self.audio.queue_music:
             await ctx.message.reply("順番待ちの曲がないのだ。")
             return
 
@@ -330,7 +334,7 @@ class VoiceClient(commands.Cog):
             if page < 1:
                 page = 1
         
-        queue_count = len(self.audio.music_queue)
+        queue_count = len(self.audio.queue_music)
         
         if queue_count <= (page - 1) * QUEUE_SHOW_COUNT:
             await ctx.message.reply(f"そのページには曲がないのだ。({queue_count}曲しかないのだ。)")
@@ -339,14 +343,14 @@ class VoiceClient(commands.Cog):
         max_page = (queue_count + QUEUE_SHOW_COUNT - 1) // QUEUE_SHOW_COUNT
         queue_message = f"👇順番待ちの曲なのだ ( {page} / {max_page} ページ )👇"
         for i, item in enumerate(
-            self.audio.music_queue,
+            self.audio.queue_music,
             start = 1
         ):
             if i <= (page - 1) * QUEUE_SHOW_COUNT:
                 continue
 
             if page * QUEUE_SHOW_COUNT < i:
-                queue_message += f"\n合計で{len(self.audio.music_queue)}曲あるのだ。 ( {page} / {max_page} ページ )"
+                queue_message += f"\n合計で{len(self.audio.queue_music)}曲あるのだ。 ( {page} / {max_page} ページ )"
                 if page == 1:
                     queue_message += "\n次のページは 「sora queue 2」 で見るのだ。"
                 break

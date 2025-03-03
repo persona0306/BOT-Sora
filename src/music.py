@@ -173,7 +173,7 @@ URLの前に「shuffle」と書くと、
             self.bot.get_cog("VoiceClient").audio.skip()
             logging.info("Skipping current music")
 
-            if self.bot.get_cog("VoiceClient").audio.music_queue:
+            if self.bot.get_cog("VoiceClient").audio.queue_music:
                 await ctx.message.reply("次の曲にスキップしたのだ。")
             else:
                 await ctx.message.reply("次の曲がないのだ。")
