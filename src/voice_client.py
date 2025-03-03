@@ -21,6 +21,7 @@ PROGRESS_BAR_LENGTH = 15
 QUEUE_SHOW_COUNT = 10
 
 MUSIC_MULTIPLIER_ON_SPEAK = 0.6
+MUSIC_PROGRESS_UPDATE_DELAY = 2000
 
 VOICEVOX_URL = os.getenv("VOICEVOX_URL")
 
@@ -87,7 +88,7 @@ class YoutubeSource(discord.AudioSource):
             )
 
         self.elapsed_time += 20
-        if self.message is not None and self.elapsed_time % 1000 == 0:
+        if self.message is not None and self.elapsed_time % MUSIC_PROGRESS_UPDATE_DELAY == 0:
             minutes, seconds = divmod(self.elapsed_time // 1000, 60)
 
             progress = self.elapsed_time / self.duration / 1000
