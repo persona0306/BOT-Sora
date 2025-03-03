@@ -73,7 +73,7 @@ class Music(commands.Cog):
             yt_item = await self.get_youtube_info(query)
 
             logging.info("queueing music")
-            await self.queue_music(
+            self.bot.get_cog("VoiceClient").audio.add_youtube_source(
                 url = yt_item['url'],
                 title = yt_item['title'],
                 duration = yt_item['duration']
@@ -243,12 +243,6 @@ URLの前に「shuffle」と書くと、
                 video = info
     
         return video
-
-    async def queue_music(self, url, title, duration):
-        logging.info("queue_music called with Music URL: %s", url)
-
-        self.bot.get_cog("VoiceClient").audio.add_youtube_source(url, title, duration)
-        logging.info("Added music source to VoiceClient: %s", url)
 
     async def queue_playlist(self, ctx, url, shuffle=False):
         if url == '':
