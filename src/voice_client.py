@@ -287,7 +287,11 @@ class VoiceClient(commands.Cog):
             return
 
         voice_client.stop()
-        Music.queue_music.clear()
+        self.audio.queue_music.clear()
+        self.audio.queue_speak.clear()
+        self.audio.current_music_source = None
+        self.audio.current_speak_source = None
+        self.audio.cleanup()
 
         await self.speak(
             'じゃあね、なのだ',
