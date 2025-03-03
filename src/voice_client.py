@@ -171,7 +171,7 @@ class CombinedAudioSource(discord.AudioSource):
         if self.current_music_source is None and self.queue_music:
             self.current_music_source = self.queue_music.pop(0)
             logging.info("Switched to next music source")
-            if self.queue_music is not None and isinstance(self.queue_music[0], YoutubeSource):
+            if self.queue_music and isinstance(self.queue_music[0], YoutubeSource):
                 self.queue_music[0].download()
 
         speak_data = self.current_speak_source.read() if self.current_speak_source else None
