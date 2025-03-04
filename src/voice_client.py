@@ -24,7 +24,7 @@ PROGRESS_BAR_LENGTH = 15
 QUEUE_SHOW_COUNT = 10
 
 MUSIC_MULTIPLIER_ON_SPEAK = 0.6
-MUSIC_PROGRESS_UPDATE_DELAY = 2000
+MUSIC_PROGRESS_UPDATE_DELAY = 3000
 
 VOICEVOX_URL = os.getenv("VOICEVOX_URL")
 
@@ -61,7 +61,7 @@ class YoutubeSource(discord.AudioSource):
                 self.source = PCMVolumeTransformer(
                     FFmpegPCMAudio(
                         url2,
-                        before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+                        before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -timeout 3000000",
                     ),
                     volume=0.03
                 )
@@ -178,9 +178,9 @@ class CombinedAudioSource(discord.AudioSource):
         speak_data = self.current_speak_source.read() if self.current_speak_source else None
         music_data = self.current_music_source.read() if self.current_music_source else None
 
-        if not speak_data:
+        if speak_data == b'':
             self.current_speak_source = None
-        if not music_data:
+        if music_data == b'':
             self.current_music_source = None
 
         if not speak_data and not music_data:
