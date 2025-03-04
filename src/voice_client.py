@@ -58,13 +58,16 @@ class YoutubeSource(discord.AudioSource):
                 info = ydl.extract_info(self.url, download=False)
                 url2 = info['url']
 
+                logging.info("Extracted video info: %s", info)
+
                 self.source = PCMVolumeTransformer(
                     FFmpegPCMAudio(
                         url2,
-                        before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -timeout 3000000",
+                        before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -timeout 1000000",
                     ),
                     volume=0.03
                 )
+                logging.info("Created audio source")
         
         asyncio.run_coroutine_threadsafe(
             execute_download(),
