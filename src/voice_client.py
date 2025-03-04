@@ -61,7 +61,7 @@ class YoutubeSource(discord.AudioSource):
                 self.source = PCMVolumeTransformer(
                     FFmpegPCMAudio(
                         url2,
-                        before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+                        before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -timeout 3000000",
                     ),
                     volume=0.03
                 )
