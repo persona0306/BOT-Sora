@@ -248,7 +248,7 @@ URLの前に「shuffle」と書くと、
                 entry = raw_info
             
             if 'requested_formats' in entry:
-                info["url"] = entry['requested_formats'][0]
+                info["url"] = entry['requested_formats'][0]['url']
     
         return info
 
