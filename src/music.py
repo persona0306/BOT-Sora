@@ -68,7 +68,7 @@ class Music(commands.Cog):
             logging.info("Not connected to a voice channel")
             return
         
-        async def queue():
+        async def queue(self):
             logging.info("getting youtube url")
             yt_item = await self.get_youtube_info(query)
 
