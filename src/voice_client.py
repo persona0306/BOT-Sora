@@ -34,6 +34,10 @@ YDL_OPTS = {
     'noplaylist': True,
 }
 
+class EmptyAudioSource(discord.AudioSource):
+    def read(self):
+        return b''
+
 class YoutubeSource(discord.AudioSource):
     def __init__(self, bot: commands.Bot, url: str, title: str, duration: int):
         self.bot = bot
@@ -60,13 +64,20 @@ class YoutubeSource(discord.AudioSource):
 
                 logging.info("Extracted video info: %s", info)
 
-                self.source = PCMVolumeTransformer(
-                    FFmpegPCMAudio(
-                        url2,
-                        before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -timeout 1000000",
-                    ),
-                    volume=0.03
-                )
+                try:
+                    self.source = PCMVolumeTransformer(
+                        FFmpegPCMAudio(
+                            url2,
+                            before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -timeout 1000000",
+                        ),
+                        volume=0.03
+                    )
+                except Exception as ex:
+                    await self.bot.get_cog("VoiceClient").channel.send(f"再生しようとしたらエラーが出たのだ・・・。 音楽：{self.title}, エラー：{ex}")
+                    logging.error("Error while creating audio source: %s", ex)
+                    self.source = EmptyAudioSource()
+                    return
+
                 logging.info("Created audio source")
         
         asyncio.run_coroutine_threadsafe(
