@@ -68,26 +68,17 @@ class Music(commands.Cog):
             logging.info("Not connected to a voice channel")
             return
         
-        async def queue():
-            logging.info("getting youtube url")
-            yt_item = await self.get_youtube_info(query)
+        logging.info("getting youtube url")
+        yt_item = await self.get_youtube_info(query)
 
-            logging.info("Calling voiceclient to add youtube source")
-            combined_audio_source = self.bot.get_cog("VoiceClient").audio
-            logging.info(combined_audio_source)
-            logging.info("Adding youtube source to voiceclient")
-            combined_audio_source.add_youtube_source(
-                url = yt_item['url'],
-                title = yt_item['title'],
-                duration = yt_item['duration']
-            )
-            await ctx.message.reply(f"曲を再生するのだ: {yt_item.get('title')}")
-            logging.info("Queued music: %s (%s)", yt_item.get('title'), yt_item.get('url'))
-
-        asyncio.run_coroutine_threadsafe(
-            queue(),
-            self.bot.loop
+        logging.info("Calling voiceclient to add youtube source")
+        self.bot.get_cog("VoiceClient").audio.add_youtube_source(
+            url = yt_item['url'],
+            title = yt_item['title'],
+            duration = yt_item['duration']
         )
+        await ctx.message.reply(f"曲を再生するのだ: {yt_item.get('title')}")
+        logging.info("Queued music: %s (%s)", yt_item.get('title'), yt_item.get('url'))
 
     @commands.command(
         name="playlist",
