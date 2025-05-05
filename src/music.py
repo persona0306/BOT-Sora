@@ -35,6 +35,8 @@ class Music(commands.Cog):
         logging.info("Insert command called with index: %d and query: %s", insert_index, insert_query)
 
         yt_item = self.get_youtube_info(insert_query)
+        logging.info("Retrieved youtube info: %s", yt_item)
+
         self.bot.get_cog("VoiceClient").audio.add_youtube_source(
             url = yt_item['url'],
             title = yt_item['title'],
