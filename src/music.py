@@ -231,20 +231,26 @@ URLの前に「shuffle」と書くと、
             'quiet': True,
             'verbose': True,
         }
+
+        info = {
+            'url': None,
+            'title': '取得に失敗したのだ・・・。',
+            'duration': 0,
+        }
     
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(query, download=False)
-            if 'entries' in info:
-                entry = info['entries'][0]
+            raw_info = ydl.extract_info(query, download=False)
+            if 'entries' in raw_info:
+                entry = raw_info['entries'][0]
+                info['title'] = entry.get('title', '取得に失敗したのだ・・・。')
+                info['duration'] = entry.get('duration', 0)
             else:
-                entry = info
+                entry = raw_info
             
             if 'requested_formats' in entry:
-                video = entry['requested_formats'][0]
-            else:
-                video = entry
+                info["url"] = entry['requested_formats'][0]
     
-        return video
+        return info
 
     async def queue_playlist(self, ctx, url, shuffle=False):
         if url == '':
