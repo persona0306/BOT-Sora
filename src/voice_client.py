@@ -149,6 +149,7 @@ class CombinedAudioSource(discord.AudioSource):
         logging.info("Added music source to audio queue to position %d, %d audios are in queue", position, len(self.queue_music))
     
     def add_youtube_source(self, url, title, duration, position = None):
+        logging.info()("Adding youtube source to audio queue: %s", url)
         source = YoutubeSource(self.bot, url, title, duration)
         self.add_music_source(source, position)
         logging.info("Added youtube source to audio queue")
