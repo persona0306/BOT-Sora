@@ -76,6 +76,7 @@ class YoutubeSource(discord.AudioSource):
                     await self.bot.get_cog("VoiceClient").channel.send(f"再生しようとしたらエラーが出たのだ・・・。 音楽：{self.title}, エラー：{ex}")
                     logging.error("Error while creating audio source: %s", ex)
                     self.source = EmptyAudioSource()
+                    return
 
                 logging.info("Created audio source")
         
