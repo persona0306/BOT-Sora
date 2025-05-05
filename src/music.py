@@ -73,7 +73,10 @@ class Music(commands.Cog):
             yt_item = await self.get_youtube_info(query)
 
             logging.info("Calling voiceclient to add youtube source")
-            self.bot.get_cog("VoiceClient").audio.add_youtube_source(
+            combined_audio_source = self.bot.get_cog("VoiceClient").audio
+            logging.info(combined_audio_source)
+            logging.info("Adding youtube source to voiceclient")
+            combined_audio_source.add_youtube_source(
                 url = yt_item['url'],
                 title = yt_item['title'],
                 duration = yt_item['duration']
