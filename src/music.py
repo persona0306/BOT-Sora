@@ -234,10 +234,15 @@ URLの前に「shuffle」と書くと、
     
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(query, download=False)
-            if 'requested_formats' in info:
-                video = info['requested_formats'][0]
+            if 'entries' in info:
+                entry = info['entries'][0]
             else:
-                video = info
+                entry = info
+            
+            if 'requested_formats' in entry:
+                video = entry['requested_formats'][0]
+            else:
+                video = entry
     
         return video
 
