@@ -72,7 +72,7 @@ class Music(commands.Cog):
             logging.info("getting youtube url")
             yt_item = await self.get_youtube_info(query)
 
-            logging.info("queueing music")
+            logging.info("Calling voiceclient to add youtube source")
             self.bot.get_cog("VoiceClient").audio.add_youtube_source(
                 url = yt_item['url'],
                 title = yt_item['title'],
