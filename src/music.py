@@ -70,8 +70,9 @@ class Music(commands.Cog):
             logging.info("Not connected to a voice channel")
             return
         
-        logging.info("getting youtube url")
+        logging.info("Getting youtube info...")
         yt_item = await self.get_youtube_info(query)
+        logging.info("Retrieved youtube info: %s", yt_item)
 
         logging.info("Calling voiceclient to add youtube source")
         self.bot.get_cog("VoiceClient").audio.add_youtube_source(
