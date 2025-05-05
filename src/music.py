@@ -242,13 +242,9 @@ URLの前に「shuffle」と書くと、
             raw_info = ydl.extract_info(query, download=False)
             if 'entries' in raw_info:
                 entry = raw_info['entries'][0]
+                info['url'] = entry.get('webpage_url', None)
                 info['title'] = entry.get('title', '取得に失敗したのだ・・・。')
                 info['duration'] = entry.get('duration', 0)
-            else:
-                entry = raw_info
-            
-            if 'requested_formats' in entry:
-                info["url"] = entry['requested_formats'][0]['url']
     
         return info
 
