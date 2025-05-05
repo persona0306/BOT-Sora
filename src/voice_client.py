@@ -36,7 +36,7 @@ YDL_OPTS = {
 
 class EmptyAudioSource(discord.AudioSource):
     def read(self):
-        return b'\x00' * 3840
+        return b''
 
 class YoutubeSource(discord.AudioSource):
     def __init__(self, bot: commands.Bot, url: str, title: str, duration: int):
