@@ -177,9 +177,11 @@ async def openai_chat(request_messages: list[dict[str, str]]) -> str:
         response_message = response.choices[0].message.content
         logging.info("Received response from OpenAI API: %s", response_message)
 
+        return response_message
+
     except Exception as e:
         logging.error("Error while communicating with OpenAI API: %s", e)
-        response_message = "エラーが発生したのだ・・・。もう一回言ってみてくれるのだ？"
+        return "エラーが発生したのだ・・・。もう一回言ってみてくれるのだ？"
 
 async def prepare_ai_request(message: Message) -> list[dict[str, str]]:
     total_length = 0
