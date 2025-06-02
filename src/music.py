@@ -35,6 +35,8 @@ class Music(commands.Cog):
         logging.info("Insert command called with index: %d and query: %s", insert_index, insert_query)
 
         yt_item = self.get_youtube_info(insert_query)
+        logging.info("Retrieved youtube info: %s", yt_item)
+
         self.bot.get_cog("VoiceClient").audio.add_youtube_source(
             url = yt_item['url'],
             title = yt_item['title'],
@@ -68,8 +70,9 @@ class Music(commands.Cog):
             logging.info("Not connected to a voice channel")
             return
         
-        logging.info("getting youtube url")
+        logging.info("Getting youtube info...")
         yt_item = await self.get_youtube_info(query)
+        logging.info("Retrieved youtube info: %s", yt_item)
 
         logging.info("Calling voiceclient to add youtube source")
         self.bot.get_cog("VoiceClient").audio.add_youtube_source(
@@ -228,15 +231,22 @@ URLの前に「shuffle」と書くと、
             'quiet': True,
             'verbose': True,
         }
+
+        info = {
+            'url': None,
+            'title': '取得に失敗したのだ・・・。',
+            'duration': 0,
+        }
     
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(query, download=False)
-            if 'entries' in info:
-                video = info['entries'][0]
-            else:
-                video = info
+            raw_info = ydl.extract_info(query, download=False)
+            if 'entries' in raw_info:
+                entry = raw_info['entries'][0]
+                info['url'] = entry.get('webpage_url', None)
+                info['title'] = entry.get('title', '取得に失敗したのだ・・・。')
+                info['duration'] = entry.get('duration', 0)
     
-        return video
+        return info
 
     async def queue_playlist(self, ctx, url, shuffle=False):
         if url == '':
