@@ -1,13 +1,15 @@
 import asyncio
+from datetime import timezone, timedelta
+import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
 import random
-import logging
-from openai import OpenAI
+import re
 
 import discord
 from discord import Message
 from discord.ext import commands
+from openai import OpenAI
 
 from .music import Music
 from .system import System
@@ -39,7 +41,8 @@ openai = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY")
 )
 
-AI_MAX_CONVERSATION_COUNT = 8
+AI_MAX_TEXT_HISTORY_COUNT = 64
+AI_MAX_TEXT_HISTORY_LENGTH = 16384
 
 BOT_PROMPT = f"""一人称は「ボク」で、語尾に「のだ」を使ってずんだもんのように話す。
 あなたは「BOT Sora」という。「ぺるそな(ぺる)」に作られたDiscordのBOTで、
@@ -112,57 +115,23 @@ async def on_message(message: Message):
     aliases=["chat"],
     usage="sora ai <話す内容>",
     help=f"""ボクがChatGPTを使って返事するのだ。
-会話の履歴は最大{AI_MAX_CONVERSATION_COUNT}つまで保存され、それ以上は古いものから消えるのだ。
-{voice_client.MAX_SPEAK_LENGTH}文字以上はいっぺんに喋れないから、続きを話してほしいときはまたコマンドを使うのだ。"""
+会話の履歴は最大{AI_MAX_TEXT_HISTORY_COUNT}つ前までさかのぼれるのだ。"""
 )
 async def ai(ctx):
     content = ctx.message.content[7:]
     logging.info("AI command received with content: %s", content)
 
-    conversation_history = bot.get_cog("VoiceClient").conversation_history
-
-    # Add the new user message to the conversation history
-    conversation_history.append({"role": "user", "content": content})
-    logging.info("Updated conversation history: %s", conversation_history)
-
-    # Keep only the last 4 exchanges (8 messages: 4 user + 4 bot)
-    conversation_count = len(conversation_history)
-    logging.info("Conversation history length: %s / %s", conversation_count, AI_MAX_CONVERSATION_COUNT)
-    if conversation_count > AI_MAX_CONVERSATION_COUNT:
-        conversation_history = conversation_history[-AI_MAX_CONVERSATION_COUNT:]
-        logging.info("Trimmed conversation history: %s", conversation_history)    
-
-    # Prepare the messages for the API request
-    messages = [{"role": "system", "content": BOT_PROMPT}] + conversation_history
-    logging.info("Prepared messages for API request: %s", messages)
-
-    try:
-        async with ctx.typing():
-            response = openai.chat.completions.create(
-                messages=messages,
-                model="gpt-4o",
-            )
-            response_message = response.choices[0].message.content
-            logging.info("Received response from OpenAI API: %s", response_message)
-
-        await ctx.message.reply(response_message)
+    async with ctx.typing():
+        request_messages = await prepare_ai_request(ctx.message)
+        openai_response = await openai_chat(request_messages)
+        await ctx.message.reply(openai_response)
         logging.info("Replied to user")
 
         client = bot.get_cog("VoiceClient")
-
         await client.speak(
-            response_message,
+            openai_response,
             ctx.message.guild
         )
-        
-        # Add the bot's response to the conversation history
-        conversation_history.append({"role": "assistant", "content": response_message})
-        logging.info("Updated conversation history: %s", conversation_history)
-
-    except Exception as e:
-        logging.error("Error while communicating with OpenAI API: %s", e)
-        await ctx.message.reply("エラーが発生したのだ・・・。もう一回言ってみてくれるのだ？")
-        return
 
 @bot.command(
     name="roulette",
@@ -198,6 +167,63 @@ async def roulette(ctx):
             elements[index],
             channel.guild
         )
+
+async def openai_chat(request_messages: list[dict[str, str]]) -> str:
+    try:
+        response = openai.chat.completions.create(
+            messages=request_messages,
+            model="gpt-4o-2024-11-20",
+        )
+        response_message = response.choices[0].message.content
+        logging.info("Received response from OpenAI API: %s", response_message)
+
+    except Exception as e:
+        logging.error("Error while communicating with OpenAI API: %s", e)
+        response_message = "エラーが発生したのだ・・・。もう一回言ってみてくれるのだ？"
+
+async def prepare_ai_request(message: Message) -> list[dict[str, str]]:
+    total_length = 0
+    history = []
+
+    async for history_message in message.channel.history(limit=AI_MAX_TEXT_HISTORY_COUNT, oldest_first=False):
+        if history_message.author.bot:
+            role = "assistant"
+        else:
+            role = "user"
+        content = history_message.content.strip()
+        if not content:
+            continue
+        # JSTに変換
+        jst = timezone(timedelta(hours=9))
+        timestamp = history_message.created_at.astimezone(jst).strftime("[%Y-%m-%d %H:%M:%S]")
+        history.append({
+            "role": role,
+            "content": f"{timestamp} {content}",
+            "name": safe_name(history_message.author.display_name)  # ユーザー名を追加
+        })
+        total_length += len(content)
+        if total_length > AI_MAX_TEXT_HISTORY_LENGTH:
+            break
+    
+    request_messages = [{"role": "system", "content": BOT_PROMPT}]
+    request_messages.extend(reversed(history)) # 最新のメッセージから順に追加
+
+    jst = timezone(timedelta(hours=9))
+    timestamp = message.created_at.astimezone(jst).strftime("[%Y-%m-%d %H:%M:%S]")
+    request_messages.append({
+        "role": "user",
+        "content": f"{timestamp} {message.content}",
+        "name": safe_name(message.author.display_name)  # ユーザー名を追加
+    })
+
+    logging.info("Prepared messages for API request: %s", request_messages)
+    
+    return request_messages
+
+def safe_name(name: str) -> str:
+    # OpenAIのname制約: ^[^\s<|\\/>]+$
+    # スペースや < | \ / > を除外し、長さも制限（最大64文字）
+    return re.sub(r'[\s<|\\/>]', '_', name)[:64]
 
 logging.info('''
 ========================================

@@ -236,7 +236,6 @@ class CombinedAudioSource(discord.AudioSource):
 class VoiceClient(commands.Cog):
     character = 3
     channel = None
-    conversation_history = []
 
     def __init__(self, bot: commands.Bot):
         self.audio = CombinedAudioSource(bot)
